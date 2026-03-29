@@ -699,6 +699,21 @@ public class KcaExpeditionCheckViewService extends BaseService {
     }
 
     /**
+     * Count drum canisters in fleet.
+     */
+    private int getFleetDrumCount() {
+        if (ship_data == null) return 0;
+        int count = 0;
+        for (JsonObject obj : ship_data) {
+            for (JsonElement itemobj : obj.getAsJsonArray("item")) {
+                if (itemobj.getAsJsonObject().get("slotitem_id").getAsInt() == 75)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Calculate great success rate for the current fleet on a given expedition.
      *
      * @param expedition_no the expedition number
@@ -707,22 +722,10 @@ public class KcaExpeditionCheckViewService extends BaseService {
     private double calculateGreatSuccessRate(int expedition_no) {
         if (ship_data == null || ship_data.isEmpty()) return -1;
 
-        int sparkledCount = 0;
+        int sparkledCount = getSparkledCount();
         int shipCount = ship_data.size();
-        int flagshipLevel = 0;
-        int drumCount = 0;
-
-        for (int i = 0; i < ship_data.size(); i++) {
-            JsonObject ship = ship_data.get(i);
-            int cond = ship.get("cond").getAsInt();
-            if (cond >= 50) sparkledCount++;
-            if (i == 0) flagshipLevel = ship.get("lv").getAsInt();
-
-            for (JsonElement itemobj : ship.getAsJsonArray("item")) {
-                int slotitem_id = itemobj.getAsJsonObject().get("slotitem_id").getAsInt();
-                if (slotitem_id == 75) drumCount++; // Drum canister
-            }
-        }
+        int flagshipLevel = ship_data.get(0).get("lv").getAsInt();
+        int drumCount = getFleetDrumCount();
 
         int gsType = getGreatSuccessType(expedition_no);
         double rate;
@@ -964,15 +967,7 @@ public class KcaExpeditionCheckViewService extends BaseService {
                 int[] drumParams = getDrumParams(expedition_no);
                 int drumMin = drumParams[0];
                 int drumMax = drumParams[1];
-                int drumCount = 0;
-                if (ship_data != null) {
-                    for (JsonObject obj : ship_data) {
-                        for (JsonElement itemobj : obj.getAsJsonArray("item")) {
-                            if (itemobj.getAsJsonObject().get("slotitem_id").getAsInt() == 75)
-                                drumCount++;
-                        }
-                    }
-                }
+                int drumCount = getFleetDrumCount();
                 String drumCheck = drumCount >= drumMin ? "✓" : "✗";
                 if (drumMin > 0) {
                     lines.add(drumCheck + " " + KcaUtils.format(getString(R.string.excheckview_gs_desc_drum_combined),
