@@ -1,7 +1,9 @@
 package com.antest1.kcanotify;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
@@ -83,11 +85,8 @@ public class KcaExpeditionCheckViewService extends BaseService {
     int button = 0;
     boolean isGreatSuccess = false;
 
-    // State for GS rate long-press tooltip
-    private int currentGsExpedNo = -1;
-    private double currentGsRate = -1;
-    private int currentSparkledCount = 0;
-    private int currentShipCount = 0;
+
+
     JsonArray deckdata;
     List<JsonObject> ship_data;
     List<Integer> expedition_data = new ArrayList<>();
@@ -229,27 +228,7 @@ public class KcaExpeditionCheckViewService extends BaseService {
         layoutView.setVisibility(View.VISIBLE);
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private final View.OnTouchListener gsRateTouchListener = (v, event) -> {
-        switch (event.getAction()) {
-            case android.view.MotionEvent.ACTION_DOWN:
-                if (currentGsExpedNo > 0) {
-                    String desc = getGreatSuccessDescription(currentGsExpedNo);
-                    ((TextView) layoutView.findViewById(R.id.excheck_info)).setText(desc);
-                    layoutView.findViewById(R.id.excheck_info).setBackgroundColor(
-                            ContextCompat.getColor(getApplicationContext(), R.color.colorFleetInfoExpedition));
-                }
-                return true;
-            case android.view.MotionEvent.ACTION_UP:
-            case android.view.MotionEvent.ACTION_CANCEL:
-                // Restore original info bar content
-                if (checkUserShipDataLoaded()) {
-                    setView();
-                }
-                return true;
-        }
-        return false;
-    };
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -795,32 +774,241 @@ public class KcaExpeditionCheckViewService extends BaseService {
     }
 
     /**
-     * Get the number of sparkled ships needed for great success.
-     * For Normal type: all ships must be sparkled (= ship count)
-     * For Flagship/Drum type: more sparkled = higher rate, but not all required
+     * Get minimum sparkled ships needed to guarantee great success (rate ≥ 100%).
+     * Calculation depends on expedition type and current fleet state.
      */
-    private int getRequiredSparkleCount(int expedition_no, int shipCount) {
+    private int getRequiredSparkleForGS(int expedition_no) {
         int gsType = getGreatSuccessType(expedition_no);
-        // All types benefit from all sparkled; denominator shows how many needed
-        return shipCount;
+        int shipCount = ship_data != null ? ship_data.size() : 0;
+
+        switch (gsType) {
+            case GS_TYPE_NORMAL:
+                // All ships must be sparkled; rate = (count*15+20)/0.99
+                // Need (n*15+20)/0.99 >= 100 → n >= ceil((99-20)/15) = 6
+                // Show the actual required count even if fleet is too small
+                return (int) Math.ceil((99.0 - 20) / 15.0);
+
+            case GS_TYPE_FLAGSHIP: {
+                // rate = (sparkled*15 + 15 + floor(sqrt(fsLv) + fsLv/10)) / 0.99
+                // need sparkled*15 + 15 + floor(sqrt(fsLv) + fsLv/10) >= 99
+                int fsLevel = 0;
+                if (ship_data != null && !ship_data.isEmpty()) {
+                    fsLevel = ship_data.get(0).get("lv").getAsInt();
+                }
+                int fsBonus = (int) Math.floor(Math.sqrt(fsLevel) + fsLevel / 10.0);
+                int needed = (int) Math.ceil((99.0 - 15 - fsBonus) / 15.0);
+                return Math.max(0, Math.min(needed, shipCount));
+            }
+
+            case GS_TYPE_DRUM: {
+                // With max drums: rate = (sparkled*15 + 40) / 0.99 → need sparkled >= ceil((99-40)/15) = 4
+                // With min drums: rate = (sparkled*15 + 5) / 0.99 → need sparkled >= ceil((99-5)/15) = 7
+                // Without drums (min>0): rate = 0 → impossible
+                int drumCount = 0;
+                if (ship_data != null) {
+                    for (JsonObject obj : ship_data) {
+                        for (JsonElement itemobj : obj.getAsJsonArray("item")) {
+                            if (itemobj.getAsJsonObject().get("slotitem_id").getAsInt() == 75)
+                                drumCount++;
+                        }
+                    }
+                }
+                int[] drumParams = getDrumParams(expedition_no);
+                int base;
+                if (drumCount >= drumParams[1]) {
+                    base = 40;
+                } else if (drumParams[0] == 0) {
+                    base = 20;
+                } else if (drumCount >= drumParams[0]) {
+                    base = 5;
+                } else {
+                    return shipCount; // impossible without drums, show all
+                }
+                int needed = (int) Math.ceil((99.0 - base) / 15.0);
+                return Math.max(0, Math.min(needed, shipCount));
+            }
+
+            default:
+                return shipCount;
+        }
     }
 
     /**
-     * Get a human-readable description of great success requirements.
+     * Get a detailed checklist of great success requirements, matching poi-plugin-ezexped style.
+     * Each requirement is a line with ✓ or ✗ prefix.
+     *
+     * Normal type:  [✓/✗] All ships sparkled (X not sparkled)
+     * Flagship type: [✓/✗] Flagship Lv.XX + sparkled → rate boost
+     *                [✓/✗] Higher Lv ship as flagship recommended
+     * Drum type:    [✓/✗] Drum ≥N (current: X)
+     *               [✓/✗] Sparkled ships (X not sparkled)
      */
+    /**
+     * Get ship name from ship data, with translation support.
+     */
+    private String getShipName(int ship_id) {
+        JsonObject kcData = getKcShipDataById(ship_id, "name");
+        if (kcData != null && kcData.has("name")) {
+            String jpName = kcData.get("name").getAsString();
+            return KcaApiData.getShipTranslation(jpName, ship_id, true);
+        }
+        return "?";
+    }
+
+    /**
+     * Get list of non-sparkled ship names with levels.
+     */
+    private String getNotSparkledShipList() {
+        if (ship_data == null) return "";
+        List<String> names = new ArrayList<>();
+        for (JsonObject ship : ship_data) {
+            if (ship.get("cond").getAsInt() < 50) {
+                int ship_id = ship.get("ship_id").getAsInt();
+                int lv = ship.get("lv").getAsInt();
+                names.add(getShipName(ship_id) + " Lv." + lv);
+            }
+        }
+        return joinStr(names, ", ");
+    }
+
+    /**
+     * Build a colored SpannableStringBuilder for GS requirements.
+     * Each line is independently colored green (met) or red (not met).
+     */
+    private SpannableStringBuilder buildGreatSuccessDescription(int expedition_no) {
+        int colorGood = ContextCompat.getColor(getApplicationContext(), R.color.colorExpeditionBtnGoodBack);
+        int colorBad = ContextCompat.getColor(getApplicationContext(), R.color.colorExpeditionBtnFailBack);
+
+        String raw = getGreatSuccessDescription(expedition_no);
+        String[] lines = raw.split("\n");
+        SpannableStringBuilder ssb = new SpannableStringBuilder();
+
+        int itemNum = 0;
+        for (int i = 0; i < lines.length; i++) {
+            if (i > 0) ssb.append("\n");
+            String line = lines[i];
+            int color;
+            boolean isMainItem = false;
+
+            // Determine color from marker, then strip marker for display
+            if (line.startsWith("✓ ")) {
+                color = colorGood;
+                line = line.substring(2);
+                isMainItem = true;
+            } else if (line.startsWith("✗ ")) {
+                color = colorBad;
+                line = line.substring(2);
+                isMainItem = true;
+            } else if (line.startsWith("  ")) {
+                // Ship name list — red (detail of failed condition)
+                color = colorBad;
+            } else {
+                // Neutral info line (e.g. flagship level info) — also a main item
+                color = ContextCompat.getColor(getApplicationContext(), R.color.white);
+                isMainItem = true;
+            }
+
+            // Add numbering to main condition lines
+            if (isMainItem) {
+                itemNum++;
+                line = itemNum + ". " + line;
+            } else {
+                line = "    " + line;
+            }
+
+            int start = ssb.length();
+            ssb.append(line);
+            int end = ssb.length();
+            ssb.setSpan(new ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        return ssb;
+    }
+
     private String getGreatSuccessDescription(int expedition_no) {
         int gsType = getGreatSuccessType(expedition_no);
+        int sparkled = getSparkledCount();
+        int total = ship_data != null ? ship_data.size() : 0;
+        int notSparkled = total - sparkled;
+        List<String> lines = new ArrayList<>();
+
         switch (gsType) {
-            case GS_TYPE_FLAGSHIP:
-                return getString(R.string.excheckview_gs_desc_flagship);
-            case GS_TYPE_DRUM:
+            case GS_TYPE_FLAGSHIP: {
+                int fsLevel = 0;
+                int maxLevel = 0;
+                String maxLvShipName = "";
+                if (ship_data != null && !ship_data.isEmpty()) {
+                    fsLevel = ship_data.get(0).get("lv").getAsInt();
+                    for (JsonObject s : ship_data) {
+                        int lv = s.get("lv").getAsInt();
+                        if (lv > maxLevel) {
+                            maxLevel = lv;
+                            maxLvShipName = getShipName(s.get("ship_id").getAsInt());
+                        }
+                    }
+                }
+                if (maxLevel > fsLevel) {
+                    lines.add("✗ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_fs_recommend),
+                            fsLevel, maxLvShipName, maxLevel));
+                } else {
+                    lines.add("✓ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_fs_highest), fsLevel));
+                }
+                if (notSparkled > 0) {
+                    lines.add("✗ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_not_sparkled), notSparkled));
+                    lines.add("  " + getNotSparkledShipList());
+                } else {
+                    lines.add("✓ " + getString(R.string.excheckview_gs_desc_all_sparkled));
+                }
+                break;
+            }
+            case GS_TYPE_DRUM: {
                 int[] drumParams = getDrumParams(expedition_no);
-                return KcaUtils.format(getString(R.string.excheckview_gs_desc_drum),
-                        drumParams[0], drumParams[1]);
+                int drumMin = drumParams[0];
+                int drumMax = drumParams[1];
+                int drumCount = 0;
+                if (ship_data != null) {
+                    for (JsonObject obj : ship_data) {
+                        for (JsonElement itemobj : obj.getAsJsonArray("item")) {
+                            if (itemobj.getAsJsonObject().get("slotitem_id").getAsInt() == 75)
+                                drumCount++;
+                        }
+                    }
+                }
+                String drumCheck = drumCount >= drumMin ? "✓" : "✗";
+                if (drumMin > 0) {
+                    lines.add(drumCheck + " " + KcaUtils.format(getString(R.string.excheckview_gs_desc_drum_combined),
+                            drumCount, drumMin, drumMax));
+                } else {
+                    // min=0 means drums always give some bonus
+                    drumCheck = drumCount >= drumMax ? "✓" : "✗";
+                    lines.add(drumCheck + " " + KcaUtils.format(getString(R.string.excheckview_gs_desc_drum_count),
+                            drumCount, drumMax));
+                }
+                if (notSparkled > 0) {
+                    lines.add("✗ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_not_sparkled), notSparkled));
+                    lines.add("  " + getNotSparkledShipList());
+                } else {
+                    lines.add("✓ " + getString(R.string.excheckview_gs_desc_all_sparkled));
+                }
+                break;
+            }
             case GS_TYPE_NORMAL:
-            default:
-                return getString(R.string.excheckview_gs_desc_normal);
+            default: {
+                int reqSparkle = getRequiredSparkleForGS(expedition_no);
+                if (total < reqSparkle) {
+                    lines.add("✗ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_need_ships),
+                            total, reqSparkle));
+                }
+                if (notSparkled > 0) {
+                    lines.add("✗ " + KcaUtils.format(getString(R.string.excheckview_gs_desc_not_sparkled), notSparkled));
+                    lines.add("  " + getNotSparkledShipList());
+                } else if (total >= reqSparkle) {
+                    lines.add("✓ " + getString(R.string.excheckview_gs_desc_all_sparkled));
+                }
+                break;
+            }
         }
+
+        return joinStr(lines, "\n");
     }
 
     private void setItemViewVisibilityById(int id, boolean visible) {
@@ -913,6 +1101,7 @@ public class KcaExpeditionCheckViewService extends BaseService {
         setItemViewVisibilityById(R.id.view_excheck_los, false);
         setItemViewVisibilityById(R.id.view_excheck_firepower, false);
         setItemViewVisibilityById(R.id.view_excheck_gs_rate, false);
+        setItemViewVisibilityById(R.id.view_excheck_gs_desc, false);
     }
 
     public void setItemViewLayout(int index, JsonObject bonus_info) {
@@ -1121,7 +1310,6 @@ public class KcaExpeditionCheckViewService extends BaseService {
         double gsRate = calculateGreatSuccessRate(no_value);
         int sparkledCount = getSparkledCount();
         int shipCount = ship_data != null ? ship_data.size() : 0;
-        int gsRequiredSparkle = getRequiredSparkleCount(no_value, shipCount);
 
         if (gsRate >= 0) {
             setItemTextViewById(R.id.view_excheck_gs_rate_value,
@@ -1135,21 +1323,22 @@ public class KcaExpeditionCheckViewService extends BaseService {
             }
         }
 
+        int requiredSparkle = getRequiredSparkleForGS(no_value);
         setItemTextViewById(R.id.view_excheck_sparkle_count,
-                KcaUtils.format(getString(R.string.excheckview_sparkle_format), sparkledCount, gsRequiredSparkle));
-        if (sparkledCount >= gsRequiredSparkle && gsRequiredSparkle > 0) {
+                KcaUtils.format(getString(R.string.excheckview_sparkle_format), sparkledCount, requiredSparkle));
+        // Color follows GS rate, not just sparkle count (some expeditions can't reach 100% even all sparkled)
+        if (gsRate >= 100) {
             ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
-                    .getColor(getApplicationContext(), R.color.colorExpeditionGreatSuccess));
+                    .getColor(getApplicationContext(), R.color.colorExpeditionBtnGoodBack));
         } else {
             ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
                     .getColor(getApplicationContext(), R.color.colorExpeditionBtnFailBack));
         }
 
-        // Store current expedition info for long-press tooltip
-        currentGsExpedNo = no_value;
-        currentGsRate = gsRate;
-        currentSparkledCount = sparkledCount;
-        currentShipCount = shipCount;
+        // Show GS requirement description with per-line coloring
+        setItemViewVisibilityById(R.id.view_excheck_gs_desc, true);
+        TextView gsDescView = itemView.findViewById(R.id.view_excheck_gs_desc_text);
+        gsDescView.setText(buildGreatSuccessDescription(no_value));
 
         itemView.setVisibility(View.VISIBLE);
     }

@@ -741,9 +741,13 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="excheckview_gs_rate_info">GS Rate</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
-    <string name="excheckview_gs_desc_normal">Normal: All ships must be sparkled (cond≥50)</string>
-    <string name="excheckview_gs_desc_flagship">Flagship: Rate based on flagship Lv + sparkled count</string>
-    <string name="excheckview_gs_desc_drum" formatted="false">Drum: %d+ drums (base), %d+ drums (max bonus) + sparkled</string>
+    <string name="excheckview_gs_desc_need_ships" formatted="false">Fleet %d ships (need %d for 100%%)</string>
+    <string name="excheckview_gs_desc_all_sparkled">All ships sparkled</string>
+    <string name="excheckview_gs_desc_not_sparkled" formatted="false">%d ship(s) not sparkled</string>
+    <string name="excheckview_gs_desc_fs_recommend" formatted="false">Flagship Lv.%d — recommend %s (Lv.%d)</string>
+    <string name="excheckview_gs_desc_fs_highest" formatted="false">Flagship Lv.%d (highest in fleet)</string>
+    <string name="excheckview_gs_desc_drum_count" formatted="false">Drum ×%d (need ≥%d for max bonus)</string>
+    <string name="excheckview_gs_desc_drum_combined" formatted="false">Drum ×%d (≥%d base / ≥%d max bonus)</string>
     <string name="excheckview_ship_cvs">CV*</string>
     <string name="labinfoview_status_standby">Standby</string>
     <string name="labinfoview_status_sortie">Sortie</string>
