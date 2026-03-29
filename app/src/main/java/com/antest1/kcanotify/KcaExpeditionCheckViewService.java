@@ -1,5 +1,6 @@
 package com.antest1.kcanotify;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -81,6 +82,12 @@ public class KcaExpeditionCheckViewService extends BaseService {
     int world = 1;
     int button = 0;
     boolean isGreatSuccess = false;
+
+    // State for GS rate long-press tooltip
+    private int currentGsExpedNo = -1;
+    private double currentGsRate = -1;
+    private int currentSparkledCount = 0;
+    private int currentShipCount = 0;
     JsonArray deckdata;
     List<JsonObject> ship_data;
     List<Integer> expedition_data = new ArrayList<>();
@@ -221,6 +228,28 @@ public class KcaExpeditionCheckViewService extends BaseService {
         }
         layoutView.setVisibility(View.VISIBLE);
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private final View.OnTouchListener gsRateTouchListener = (v, event) -> {
+        switch (event.getAction()) {
+            case android.view.MotionEvent.ACTION_DOWN:
+                if (currentGsExpedNo > 0) {
+                    String desc = getGreatSuccessDescription(currentGsExpedNo);
+                    ((TextView) layoutView.findViewById(R.id.excheck_info)).setText(desc);
+                    layoutView.findViewById(R.id.excheck_info).setBackgroundColor(
+                            ContextCompat.getColor(getApplicationContext(), R.color.colorFleetInfoExpedition));
+                }
+                return true;
+            case android.view.MotionEvent.ACTION_UP:
+            case android.view.MotionEvent.ACTION_CANCEL:
+                // Restore original info bar content
+                if (checkUserShipDataLoaded()) {
+                    setView();
+                }
+                return true;
+        }
+        return false;
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -765,6 +794,35 @@ public class KcaExpeditionCheckViewService extends BaseService {
         return count;
     }
 
+    /**
+     * Get the number of sparkled ships needed for great success.
+     * For Normal type: all ships must be sparkled (= ship count)
+     * For Flagship/Drum type: more sparkled = higher rate, but not all required
+     */
+    private int getRequiredSparkleCount(int expedition_no, int shipCount) {
+        int gsType = getGreatSuccessType(expedition_no);
+        // All types benefit from all sparkled; denominator shows how many needed
+        return shipCount;
+    }
+
+    /**
+     * Get a human-readable description of great success requirements.
+     */
+    private String getGreatSuccessDescription(int expedition_no) {
+        int gsType = getGreatSuccessType(expedition_no);
+        switch (gsType) {
+            case GS_TYPE_FLAGSHIP:
+                return getString(R.string.excheckview_gs_desc_flagship);
+            case GS_TYPE_DRUM:
+                int[] drumParams = getDrumParams(expedition_no);
+                return KcaUtils.format(getString(R.string.excheckview_gs_desc_drum),
+                        drumParams[0], drumParams[1]);
+            case GS_TYPE_NORMAL:
+            default:
+                return getString(R.string.excheckview_gs_desc_normal);
+        }
+    }
+
     private void setItemViewVisibilityById(int id, boolean visible) {
         int visible_value = visible ? View.VISIBLE : View.GONE;
         itemView.findViewById(id).setVisibility(visible_value);
@@ -1063,14 +1121,12 @@ public class KcaExpeditionCheckViewService extends BaseService {
         double gsRate = calculateGreatSuccessRate(no_value);
         int sparkledCount = getSparkledCount();
         int shipCount = ship_data != null ? ship_data.size() : 0;
+        int gsRequiredSparkle = getRequiredSparkleCount(no_value, shipCount);
 
         if (gsRate >= 0) {
             setItemTextViewById(R.id.view_excheck_gs_rate_value,
                     KcaUtils.format(getString(R.string.excheckview_gs_rate_format), gsRate));
             if (gsRate >= 100) {
-                ((TextView) itemView.findViewById(R.id.view_excheck_gs_rate_value)).setTextColor(ContextCompat
-                        .getColor(getApplicationContext(), R.color.colorExpeditionGreatSuccess));
-            } else if (gsRate > 0) {
                 ((TextView) itemView.findViewById(R.id.view_excheck_gs_rate_value)).setTextColor(ContextCompat
                         .getColor(getApplicationContext(), R.color.colorExpeditionBtnGoodBack));
             } else {
@@ -1080,14 +1136,20 @@ public class KcaExpeditionCheckViewService extends BaseService {
         }
 
         setItemTextViewById(R.id.view_excheck_sparkle_count,
-                KcaUtils.format(getString(R.string.excheckview_sparkle_format), sparkledCount, shipCount));
-        if (sparkledCount == shipCount && shipCount > 0) {
+                KcaUtils.format(getString(R.string.excheckview_sparkle_format), sparkledCount, gsRequiredSparkle));
+        if (sparkledCount >= gsRequiredSparkle && gsRequiredSparkle > 0) {
             ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
                     .getColor(getApplicationContext(), R.color.colorExpeditionGreatSuccess));
         } else {
             ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
-                    .getColor(getApplicationContext(), R.color.white));
+                    .getColor(getApplicationContext(), R.color.colorExpeditionBtnFailBack));
         }
+
+        // Store current expedition info for long-press tooltip
+        currentGsExpedNo = no_value;
+        currentGsRate = gsRate;
+        currentSparkledCount = sparkledCount;
+        currentShipCount = shipCount;
 
         itemView.setVisibility(View.VISIBLE);
     }

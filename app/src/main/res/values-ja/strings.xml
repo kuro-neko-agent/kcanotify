@@ -665,6 +665,9 @@
     <string name="excheckview_gs_rate_info">大成功率</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_normal">通常: 全員キラキラ必要 (cond≥50)</string>
+    <string name="excheckview_gs_desc_flagship">旗艦: 旗艦Lv＋キラ数で確率変動</string>
+    <string name="excheckview_gs_desc_drum" formatted="false">ドラム: %d+個(基本), %d+個(最大) ＋ キラ</string>
     <string name="excheckview_ship_cvs">空母系</string>
     <string name="labinfoview_status_standby">待機</string>
     <string name="labinfoview_status_sortie">出撃</string>

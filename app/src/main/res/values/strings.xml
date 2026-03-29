@@ -741,6 +741,9 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="excheckview_gs_rate_info">GS Rate</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_normal">Normal: All ships must be sparkled (cond≥50)</string>
+    <string name="excheckview_gs_desc_flagship">Flagship: Rate based on flagship Lv + sparkled count</string>
+    <string name="excheckview_gs_desc_drum" formatted="false">Drum: %d+ drums (base), %d+ drums (max bonus) + sparkled</string>
     <string name="excheckview_ship_cvs">CV*</string>
     <string name="labinfoview_status_standby">Standby</string>
     <string name="labinfoview_status_sortie">Sortie</string>
