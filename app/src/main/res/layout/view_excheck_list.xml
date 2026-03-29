@@ -859,6 +859,31 @@
 
                             </LinearLayout>
 
+                            <LinearLayout
+                                android:id="@+id/view_excheck_gs_desc"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="1dp">
+
+                                <TextView
+                                    android:layout_width="@dimen/excheckview_label_width"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginRight="4dp"
+                                    android:textAlignment="center"
+                                    android:textColor="@color/white"
+                                    android:textSize="@dimen/popup_text_small" />
+
+                                <TextView
+                                    android:id="@+id/view_excheck_gs_desc_text"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textColor="@color/grey"
+                                    android:textSize="@dimen/popup_text_small" />
+
+                            </LinearLayout>
+
                         </LinearLayout>
                     </ScrollView>
 

@@ -665,6 +665,16 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="excheckview_bonus_amp" formatted="false">內火艇：%d</string>
     <string name="excheckview_bonus_toku" formatted="false">特大發：%d</string>
     <string name="excheckview_bonus_result" formatted="false">（收益：%.1f%%）</string>
+    <string name="excheckview_gs_rate_info">大成功率</string>
+    <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
+    <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_need_ships" formatted="false">編成%d人 (需%d人達100%%)</string>
+    <string name="excheckview_gs_desc_all_sparkled">全員閃光</string>
+    <string name="excheckview_gs_desc_not_sparkled" formatted="false">%d名艦娘未閃光</string>
+    <string name="excheckview_gs_desc_fs_recommend" formatted="false">旗艦Lv.%d — 推薦 %s (Lv.%d)</string>
+    <string name="excheckview_gs_desc_fs_highest" formatted="false">旗艦Lv.%d (艦隊最高)</string>
+    <string name="excheckview_gs_desc_drum_count" formatted="false">ドラム缶 ×%d (需≥%d獲最大加成)</string>
+    <string name="excheckview_gs_desc_drum_combined" formatted="false">ドラム缶 ×%d (≥%d基礎 / ≥%d最大加成)</string>
     <string name="excheckview_ship_cvs">空母系</string>
     <string name="labinfoview_status_standby">待機</string>
     <string name="labinfoview_status_sortie">出擊</string>

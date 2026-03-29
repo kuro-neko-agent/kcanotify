@@ -669,9 +669,13 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="excheckview_gs_rate_info">大成功率</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
-    <string name="excheckview_gs_desc_normal">普通型: 需要全员闪光 (士气≥50)</string>
-    <string name="excheckview_gs_desc_flagship">旗舰型: 概率由旗舰等级+闪光数决定</string>
-    <string name="excheckview_gs_desc_drum" formatted="false">运输桶型: %d+个(基础), %d+个(最大加成) + 闪光</string>
+    <string name="excheckview_gs_desc_need_ships" formatted="false">编成%d人 (需%d人达100%%)</string>
+    <string name="excheckview_gs_desc_all_sparkled">全员闪光</string>
+    <string name="excheckview_gs_desc_not_sparkled" formatted="false">%d名舰娘未闪光</string>
+    <string name="excheckview_gs_desc_fs_recommend" formatted="false">旗舰Lv.%d — 推荐 %s (Lv.%d)</string>
+    <string name="excheckview_gs_desc_fs_highest" formatted="false">旗舰Lv.%d (舰队最高)</string>
+    <string name="excheckview_gs_desc_drum_count" formatted="false">ドラム缶 ×%d (需≥%d获最大加成)</string>
+    <string name="excheckview_gs_desc_drum_combined" formatted="false">ドラム缶 ×%d (≥%d基础 / ≥%d最大加成)</string>
     <string name="excheckview_ship_cvs">空母系</string>
     <string name="labinfoview_status_standby">待机</string>
     <string name="labinfoview_status_sortie">出击</string>
