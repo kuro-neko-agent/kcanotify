@@ -662,6 +662,7 @@
     <string name="excheckview_gs_rate_info">대성공률</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_need_ships" formatted="false">편성 %d척 (%d척 필요 100%%)</string>
     <string name="excheckview_gs_desc_all_sparkled">전원 키라</string>
     <string name="excheckview_gs_desc_not_sparkled" formatted="false">%d명 미키라</string>
     <string name="excheckview_gs_desc_fs_recommend" formatted="false">기함 Lv.%d — %s (Lv.%d) 추천</string>
