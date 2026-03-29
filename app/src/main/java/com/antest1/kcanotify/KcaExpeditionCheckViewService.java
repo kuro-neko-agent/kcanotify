@@ -645,6 +645,126 @@ public class KcaExpeditionCheckViewService extends BaseService {
         return value_bonus;
     }
 
+    // === Great Success Rate Calculation ===
+    // Reference: https://wikiwiki.jp/kancolle/ (expedition great success mechanics)
+    // Reference: https://github.com/poooi/poi-plugin-ezexped (exped-reqs/great-success.es, structs/ereq/)
+
+    // Great success type constants
+    private static final int GS_TYPE_NORMAL = 0;    // All sparkled required
+    private static final int GS_TYPE_FLAGSHIP = 1;  // Flagship level bonus
+    private static final int GS_TYPE_DRUM = 2;      // Drum count bonus
+
+    // Drum-type expedition parameters: {expedition_no, drum_min, drum_max}
+    private static final int[][] GS_DRUM_EXPEDS = {
+            {21, 3, 4},
+            {24, 0, 2},
+            {37, 4, 5},
+            {38, 8, 10},
+            {40, 0, 4},
+            {44, 6, 8},
+            {142, 4, 6}
+    };
+
+    // Flagship-type expeditions
+    private static final int[] GS_FLAGSHIP_EXPEDS = {
+            101, 102, 103, 104, 105, 112, 113, 114, 115,
+            41, 43, 45, 46, 32, 131, 132, 133, 141
+    };
+
+    private int getGreatSuccessType(int expedition_no) {
+        for (int[] drumExped : GS_DRUM_EXPEDS) {
+            if (drumExped[0] == expedition_no) return GS_TYPE_DRUM;
+        }
+        for (int flagExped : GS_FLAGSHIP_EXPEDS) {
+            if (flagExped == expedition_no) return GS_TYPE_FLAGSHIP;
+        }
+        return GS_TYPE_NORMAL;
+    }
+
+    private int[] getDrumParams(int expedition_no) {
+        for (int[] drumExped : GS_DRUM_EXPEDS) {
+            if (drumExped[0] == expedition_no) {
+                return new int[]{drumExped[1], drumExped[2]};
+            }
+        }
+        return new int[]{0, 0};
+    }
+
+    /**
+     * Calculate great success rate for the current fleet on a given expedition.
+     *
+     * @param expedition_no the expedition number
+     * @return great success rate as percentage (0-100+), or -1 if not calculable
+     */
+    private double calculateGreatSuccessRate(int expedition_no) {
+        if (ship_data == null || ship_data.isEmpty()) return -1;
+
+        int sparkledCount = 0;
+        int shipCount = ship_data.size();
+        int flagshipLevel = 0;
+        int drumCount = 0;
+
+        for (int i = 0; i < ship_data.size(); i++) {
+            JsonObject ship = ship_data.get(i);
+            int cond = ship.get("cond").getAsInt();
+            if (cond >= 50) sparkledCount++;
+            if (i == 0) flagshipLevel = ship.get("lv").getAsInt();
+
+            for (JsonElement itemobj : ship.getAsJsonArray("item")) {
+                int slotitem_id = itemobj.getAsJsonObject().get("slotitem_id").getAsInt();
+                if (slotitem_id == 75) drumCount++; // Drum canister
+            }
+        }
+
+        int gsType = getGreatSuccessType(expedition_no);
+        double rate;
+
+        switch (gsType) {
+            case GS_TYPE_FLAGSHIP:
+                // Rate = (sparkled*15 + 15 + floor(sqrt(fsLv) + fsLv/10)) / 0.99
+                rate = (sparkledCount * 15 + 15 + Math.floor(Math.sqrt(flagshipLevel) + flagshipLevel / 10.0)) / 0.99;
+                break;
+            case GS_TYPE_DRUM:
+                int[] drumParams = getDrumParams(expedition_no);
+                int drumMin = drumParams[0];
+                int drumMax = drumParams[1];
+                if (drumCount >= drumMax) {
+                    rate = (sparkledCount * 15 + 40) / 0.99;
+                } else if (drumMin == 0) {
+                    rate = (sparkledCount * 15 + 20) / 0.99;
+                } else if (drumCount >= drumMin) {
+                    rate = (sparkledCount * 15 + 5) / 0.99;
+                } else {
+                    rate = 0;
+                }
+                break;
+            case GS_TYPE_NORMAL:
+            default:
+                if (sparkledCount == shipCount) {
+                    rate = (shipCount * 15 + 20) / 0.99;
+                } else {
+                    rate = 0;
+                }
+                break;
+        }
+
+        return Math.round(rate * 100.0) / 100.0; // Round to 2 decimal places
+    }
+
+    /**
+     * Get sparkled ship count from current fleet.
+     *
+     * @return number of ships with morale >= 50
+     */
+    private int getSparkledCount() {
+        if (ship_data == null) return 0;
+        int count = 0;
+        for (JsonObject ship : ship_data) {
+            if (ship.get("cond").getAsInt() >= 50) count++;
+        }
+        return count;
+    }
+
     private void setItemViewVisibilityById(int id, boolean visible) {
         int visible_value = visible ? View.VISIBLE : View.GONE;
         itemView.findViewById(id).setVisibility(visible_value);
@@ -734,6 +854,7 @@ public class KcaExpeditionCheckViewService extends BaseService {
         setItemViewVisibilityById(R.id.view_excheck_fp, false);
         setItemViewVisibilityById(R.id.view_excheck_los, false);
         setItemViewVisibilityById(R.id.view_excheck_firepower, false);
+        setItemViewVisibilityById(R.id.view_excheck_gs_rate, false);
     }
 
     public void setItemViewLayout(int index, JsonObject bonus_info) {
@@ -935,6 +1056,37 @@ public class KcaExpeditionCheckViewService extends BaseService {
                     KcaUtils.format(getString(R.string.excheckview_total_format), total_firepower));
             setItemTextViewColorById(R.id.view_excheck_total_firepower,
                     check.get("total-firepower").getAsBoolean(), false);
+        }
+
+        // Great success rate calculation and display
+        setItemViewVisibilityById(R.id.view_excheck_gs_rate, true);
+        double gsRate = calculateGreatSuccessRate(no_value);
+        int sparkledCount = getSparkledCount();
+        int shipCount = ship_data != null ? ship_data.size() : 0;
+
+        if (gsRate >= 0) {
+            setItemTextViewById(R.id.view_excheck_gs_rate_value,
+                    KcaUtils.format(getString(R.string.excheckview_gs_rate_format), gsRate));
+            if (gsRate >= 100) {
+                ((TextView) itemView.findViewById(R.id.view_excheck_gs_rate_value)).setTextColor(ContextCompat
+                        .getColor(getApplicationContext(), R.color.colorExpeditionGreatSuccess));
+            } else if (gsRate > 0) {
+                ((TextView) itemView.findViewById(R.id.view_excheck_gs_rate_value)).setTextColor(ContextCompat
+                        .getColor(getApplicationContext(), R.color.colorExpeditionBtnGoodBack));
+            } else {
+                ((TextView) itemView.findViewById(R.id.view_excheck_gs_rate_value)).setTextColor(ContextCompat
+                        .getColor(getApplicationContext(), R.color.colorExpeditionBtnFailBack));
+            }
+        }
+
+        setItemTextViewById(R.id.view_excheck_sparkle_count,
+                KcaUtils.format(getString(R.string.excheckview_sparkle_format), sparkledCount, shipCount));
+        if (sparkledCount == shipCount && shipCount > 0) {
+            ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
+                    .getColor(getApplicationContext(), R.color.colorExpeditionGreatSuccess));
+        } else {
+            ((TextView) itemView.findViewById(R.id.view_excheck_sparkle_count)).setTextColor(ContextCompat
+                    .getColor(getApplicationContext(), R.color.white));
         }
 
         itemView.setVisibility(View.VISIBLE);
