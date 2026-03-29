@@ -665,6 +665,9 @@
     <string name="excheckview_gs_rate_info">Éxito Grande</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_normal">Normal: Todos sparkled (cond≥50)</string>
+    <string name="excheckview_gs_desc_flagship">Buque insignia: Tasa según Lv insignia + sparkled</string>
+    <string name="excheckview_gs_desc_drum" formatted="false">Tambor: %d+ (base), %d+ (máx bonus) + sparkled</string>
     <string name="excheckview_ship_cvs">CV*</string>
     <string name="labinfoview_status_standby">Esperando</string>
     <string name="labinfoview_status_sortie">Ataque</string>

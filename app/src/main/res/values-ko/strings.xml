@@ -662,6 +662,9 @@
     <string name="excheckview_gs_rate_info">대성공률</string>
     <string name="excheckview_gs_rate_format" formatted="false">%.1f%%</string>
     <string name="excheckview_sparkle_format" formatted="false">☆%d/%d</string>
+    <string name="excheckview_gs_desc_normal">일반: 전원 키라 필요 (컨디션≥50)</string>
+    <string name="excheckview_gs_desc_flagship">기함: 기함 레벨 + 키라 수에 따른 확률</string>
+    <string name="excheckview_gs_desc_drum" formatted="false">드럼: %d+개 (기본), %d+개 (최대 보너스) + 키라</string>
     <string name="excheckview_ship_cvs">항모류</string>
     <string name="labinfoview_status_standby">대기</string>
     <string name="labinfoview_status_sortie">출격</string>
