@@ -8,3 +8,7 @@
 /captures
 .externalNativeBuild
 /.idea/
+
+# Build artifacts
+app/.cxx/
+app/google-services.json

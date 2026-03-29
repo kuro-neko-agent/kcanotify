@@ -490,6 +490,9 @@ public class KcaExpeditionCheckViewService extends BaseService {
     }
 
     // Drum: 75, Daihatsu: 68, 89Tank: 166, Amp: 167, Toku-Daihatsu: 193
+    // Armed Daihatsu: 409, AB Boat: 408, Type 2 Tank (Africa): 436, Toku-Daihatsu+Type 1 Gun Tank: 449
+    // Reference: https://en.kancollewiki.net/Expeditions#Base_Daihatsu_Bonus
+    // Reference: https://github.com/poooi/poi-plugin-ezexped (income-calc.es)
     private JsonObject getBonusInfo() {
         double bonus = 0.0;
         boolean kinu_exist = false;
@@ -501,6 +504,8 @@ public class KcaExpeditionCheckViewService extends BaseService {
         int tank_count = 0;
         int amp_count = 0;
         int toku_count = 0;
+        int armed_daihatsu_count = 0;
+        int ab_boat_count = 0;
         double bonus_level = 0.0;
 
         float total_firepower = 0;
@@ -562,6 +567,18 @@ public class KcaExpeditionCheckViewService extends BaseService {
                         bonus_count += 1.0;
                         toku_count += 1;
                         break;
+                    case 409: // Armed Daihatsu (武装大発)
+                        bonus_level += level;
+                        bonus_count += 1.0;
+                        armed_daihatsu_count += 1;
+                        break;
+                    case 408: // Armored Boat AB (装甲艇 AB艇)
+                    case 436: // Daihatsu (Type 2 Tank / North Africa) (大発動艇(II号戦車/北アフリカ仕様))
+                    case 449: // Toku-Daihatsu + Type 1 Gun Tank (特大発動艇＋一式砲戦車)
+                        bonus_level += level;
+                        bonus_count += 1.0;
+                        ab_boat_count += 1;
+                        break;
                     default:
                         break;
                 }
@@ -575,6 +592,8 @@ public class KcaExpeditionCheckViewService extends BaseService {
         result.addProperty("tank", tank_count);
         result.addProperty("amp", amp_count);
         result.addProperty("toku", toku_count);
+        result.addProperty("armed_daihatsu", armed_daihatsu_count);
+        result.addProperty("ab_boat", ab_boat_count);
         result.addProperty("level", bonus_level);
         result.addProperty("firepower", (int) total_firepower);
         result.addProperty("asw", Math.floor(total_asw_value - plane_tais_value + total_asw_bonus * 2 / 3));
@@ -582,18 +601,33 @@ public class KcaExpeditionCheckViewService extends BaseService {
         return result;
     }
 
+    // Reference: https://en.kancollewiki.net/Expeditions#Base_Daihatsu_Bonus
+    // Bonus rates: Daihatsu/Toku-Daihatsu/Kinu K2: 5%, Armed Daihatsu: 3%, 89Tank/AB Boat/etc: 2%, Amp: 1%
     private int calculateBonusValue(int value, JsonObject bonus_info, boolean is_gs) {
         int kinu_count = bonus_info.get("kinu").getAsBoolean() ? 1 : 0;
         int daihatsu_count = bonus_info.get("daihatsu").getAsInt();
         int tank_count = bonus_info.get("tank").getAsInt();
         int amp_count = bonus_info.get("amp").getAsInt();
         int toku_count = bonus_info.get("toku").getAsInt();
+        int armed_daihatsu_count = bonus_info.get("armed_daihatsu").getAsInt();
+        int ab_boat_count = bonus_info.get("ab_boat").getAsInt();
         double bonus_level = bonus_info.get("level").getAsDouble();
 
-        int dlc_count = kinu_count + daihatsu_count + toku_count;
+        // B1 (before cap): 5% per Daihatsu/Toku/Kinu, 3% per Armed Daihatsu, 2% per Tank/AB Boat, 1% per Amp
+        double b1_before_cap = (kinu_count + daihatsu_count + toku_count) * 0.05
+                + armed_daihatsu_count * 0.03
+                + (tank_count + ab_boat_count) * 0.02
+                + amp_count * 0.01;
+        double bonus_default = Math.min(b1_before_cap, 0.2);
+
+        // B_star: improvement level bonus
+        int total_dlc = daihatsu_count + toku_count + armed_daihatsu_count + tank_count + ab_boat_count + amp_count;
+        if (total_dlc > 0) {
+            bonus_default += bonus_default * bonus_level / 100.0;
+        }
+
         int ntoku_count = Math.min(4, daihatsu_count + tank_count + amp_count);
-        double bonus_default = Math.min(dlc_count * 0.05 + tank_count * 0.02 + amp_count * 0.01, 0.2);
-        bonus_default += 0.002 * bonus_level;
+        // (kept for toku bonus table compatibility)
         double bonus_toku = 0.0;
         if (toku_count > 0) {
             int toku_idx;
