@@ -55,6 +55,7 @@ Attribution
   - License for kc3-translations: The MIT License [Text](https://github.com/KC3Kai/kc3-translations/blob/master/LICENSE)
 - The code for line of seek(索敵) & fighter power(制空権) calculation are written with reference to [艦隊シミュレーター＆デッキビルダー](http://kancolle-calc.net/deckbuilder.html)
 - Akashi's arsenal improvement data is written with reference to [KC3Kai](https://github.com/KC3Kai/KC3Kai), [WhoCallsTheFleet](https://github.com/TeamFleet/WhoCallsTheFleet-DB) and [明石の改修工廠早見表](http://akashi-list.me).
+- Great success rate calculation and Daihatsu bonus formula are based on data from [poi-plugin-ezexped](https://github.com/poooi/poi-plugin-ezexped) and [艦これ 攻略 Wiki*](https://wikiwiki.jp/kancolle/).
 - Reference sites: [艦これ 攻略 Wiki*](http://wikiwiki.jp/kancolle/), [Kancolle Wikia](http://kancolle.wikia.com), [kcwiki舰娘百科](https://zh.kcwiki.org)
 
 
