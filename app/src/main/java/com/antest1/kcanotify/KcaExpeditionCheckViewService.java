@@ -1008,7 +1008,8 @@ public class KcaExpeditionCheckViewService extends BaseService {
 
     private void setItemViewVisibilityById(int id, boolean visible) {
         int visible_value = visible ? View.VISIBLE : View.GONE;
-        itemView.findViewById(id).setVisibility(visible_value);
+        View v = itemView.findViewById(id);
+        if (v != null) v.setVisibility(visible_value);
     }
 
     private void setItemTextViewById(int id, String value) {
