@@ -185,6 +185,12 @@
                 android:value="com.antest1.kcanotify.SettingActivity" />
         </activity>
         <activity
+            android:name="com.antest1.kcanotify.FleetPanelActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme"
+            android:configChanges="locale|layoutDirection|orientation|screenSize|screenLayout|smallestScreenSize" />
+
+        <activity
             android:name="com.antest1.kcanotify.InitStartActivity"
             android:exported="true"
             android:launchMode="singleTask">
