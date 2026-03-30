@@ -445,6 +445,14 @@ public class FleetPanelActivity extends BaseActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        // singleTask re-entry: refresh data
+        refreshFleetData();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         // Register broadcast receivers
@@ -480,6 +488,22 @@ public class FleetPanelActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         stopTimer();
+        if (itemPopupWindow != null) {
+            itemPopupWindow.dismiss();
+            itemPopupWindow = null;
+        }
         super.onDestroy();
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Dismiss popup on configuration change to avoid stale positioning
+        if (itemPopupWindow != null && itemPopupWindow.isShowing()) {
+            itemPopupWindow.dismiss();
+        }
+        itemPopupSelected = -1;
+        // Re-bind fleet data to update layout for new orientation
+        refreshFleetData();
     }
 }
