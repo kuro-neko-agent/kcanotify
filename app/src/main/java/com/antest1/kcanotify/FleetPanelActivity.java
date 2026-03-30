@@ -4,16 +4,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -62,6 +66,7 @@ public class FleetPanelActivity extends BaseActivity {
 
     private View fleetContentView; // The inflated fleet view content
     private View itemPopupView;    // For equipment popup
+    private PopupWindow itemPopupWindow;
 
     private Handler mHandler;
     private ScheduledExecutorService timeScheduler;
@@ -142,6 +147,18 @@ public class FleetPanelActivity extends BaseActivity {
         // Info line init
         TextView fleetInfoLine = fleetContentView.findViewById(R.id.fleetview_infoline);
         fleetInfoLine.setText(getString(R.string.kca_init_content));
+
+        // Item popup view (Q2: use PopupWindow for equipment detail)
+        itemPopupView = inflater.inflate(R.layout.view_battleview_items, null);
+        itemPopupWindow = new PopupWindow(itemPopupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                false);
+        itemPopupWindow.setTouchable(false);
+        itemPopupWindow.setOutsideTouchable(false);
+
+        // Setup ship item touch listeners for equipment popup
+        setupItemTouchListeners();
 
         // Setup broadcast receivers
         refreshReceiver = new BroadcastReceiver() {
@@ -275,6 +292,117 @@ public class FleetPanelActivity extends BaseActivity {
                         KcaAkashiViewService.SHOW_AKASHIVIEW_ACTION));
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupItemTouchListeners() {
+        for (int i = 0; i < 12; i++) {
+            fleetDataManager.getFleetViewItem(fleetContentView, i)
+                    .setOnTouchListener(fleetViewItemTouchListener);
+        }
+    }
+
+    private boolean isInsideView(View view, float x, float y) {
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        float viewLeft = location[0];
+        float viewTop = location[1];
+        float viewRight = viewLeft + view.getWidth();
+        float viewBottom = viewTop + view.getHeight();
+        return (x >= viewLeft && x <= viewRight && y >= viewTop && y <= viewBottom);
+    }
+
+    private int itemPopupSelected = -1;
+
+    @SuppressLint("ClickableViewAccessibility")
+    private final View.OnTouchListener fleetViewItemTouchListener = (v, event) -> {
+        float x = event.getRawX();
+        float y = event.getRawY();
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+            case MotionEvent.ACTION_DOWN:
+                for (int i = 0; i < 12; i++) {
+                    if (isInsideView(fleetDataManager.getFleetViewItem(fleetContentView, i), x, y)) {
+                        if (itemPopupSelected != i) {
+                            // Load data for new selection
+                            JsonArray data;
+                            int shipIndex;
+                            if (fleetDataManager.isCombined(selectedFleetIndex)) {
+                                if (i < 6) {
+                                    data = deckInfoCalc.getDeckListInfo(
+                                            dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                            0, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
+                                } else {
+                                    data = deckInfoCalc.getDeckListInfo(
+                                            dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                            1, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
+                                }
+                                shipIndex = i % 6;
+                            } else {
+                                data = deckInfoCalc.getDeckListInfo(
+                                        dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                        selectedFleetIndex, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
+                                shipIndex = i;
+                            }
+                            if (shipIndex < data.size()) {
+                                JsonObject udata = data.get(shipIndex).getAsJsonObject().getAsJsonObject("user");
+                                JsonObject kcdata = data.get(shipIndex).getAsJsonObject().getAsJsonObject("kc");
+
+                                String ship_id = udata.get("ship_id").getAsString();
+                                int ship_married = udata.get("lv").getAsInt() >= 100 ? 1 : 0;
+                                JsonObject itemData = new JsonObject();
+                                itemData.add("api_slot", udata.get("slot"));
+                                itemData.add("api_slot_ex", udata.get("slot_ex"));
+                                itemData.add("api_onslot", udata.get("onslot"));
+                                itemData.add("api_maxslot", kcdata.get("maxeq"));
+                                fleetDataManager.bindItemPopupView(itemPopupView, itemData, ship_id, ship_married);
+                            }
+                        }
+
+                        // Show/update popup position
+                        int xmargin = (int) getResources().getDimension(R.dimen.item_popup_xmargin);
+                        int ymargin = (int) getResources().getDimension(R.dimen.item_popup_ymargin);
+
+                        // Measure popup to get dimensions
+                        itemPopupView.measure(
+                                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                        int popupWidth = itemPopupView.getMeasuredWidth();
+                        int popupHeight = itemPopupView.getMeasuredHeight();
+
+                        int[] rootLocation = new int[2];
+                        fleetContentView.getLocationOnScreen(rootLocation);
+
+                        int popupX = (int) (x - rootLocation[0] + xmargin);
+                        int popupY = (int) (y - rootLocation[1] - ymargin - popupHeight);
+
+                        // Adjust if going off-screen right
+                        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                        if (x + popupWidth > screenWidth) {
+                            popupX = (int) (x - rootLocation[0] - xmargin - popupWidth);
+                        }
+
+                        if (itemPopupWindow.isShowing()) {
+                            itemPopupWindow.update(popupX, popupY, -1, -1);
+                        } else {
+                            itemPopupWindow.showAtLocation(fleetContentView, Gravity.NO_GRAVITY,
+                                    popupX + rootLocation[0], popupY + rootLocation[1]);
+                        }
+                        itemPopupSelected = i;
+                        return true;
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                if (itemPopupWindow.isShowing()) {
+                    itemPopupWindow.dismiss();
+                }
+                itemPopupSelected = -1;
+                break;
+        }
+        return false;
+    };
+
     private void startPopupService(Class<?> target, String action) {
         boolean checkGameData = false;
         switch (target.getSimpleName()) {
@@ -333,6 +461,9 @@ public class FleetPanelActivity extends BaseActivity {
     protected void onPause() {
         super.onPause();
         stopTimer();
+        if (itemPopupWindow != null && itemPopupWindow.isShowing()) {
+            itemPopupWindow.dismiss();
+        }
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.unregisterReceiver(refreshReceiver);
         lbm.unregisterReceiver(closeReceiver);
