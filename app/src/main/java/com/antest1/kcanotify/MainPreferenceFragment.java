@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -410,6 +411,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
                     break;
                 case PREF_FAIRY_SIZE:
                     kca_url = KCA_API_PREF_FAIRYSIZE_CHANGED;
+                    break;
+                case PREF_DISPLAY_MODE:
+                    // Close any existing fleet views when mode changes
+                    Intent closeOverlay = new Intent(getContext(), KcaFleetViewService.class);
+                    closeOverlay.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
+                    getContext().startService(closeOverlay);
+                    LocalBroadcastManager.getInstance(getContext())
+                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
                     break;
                 case PREF_FAIRY_OPACITY:
                     kca_url = KCA_API_PREF_FAIRYALPHA_CHANGED;
