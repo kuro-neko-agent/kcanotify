@@ -849,4 +849,9 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="mitm_addon_update_available">有新的 mitm 插件更新可用。</string>
     <string name="mitm_addon_new_version">必须更新 kcanotify mitm 插件</string>
     <string name="mitm_doze_notice">电池优化可能会干扰 mitm 插件</string>
+
+    <string name="setting_menu_view_title_display_mode">显示模式</string>
+    <string name="setting_menu_view_desc_display_mode">选择舰队信息的显示方式</string>
+    <string name="display_mode_overlay">悬浮窗</string>
+    <string name="display_mode_split">分屏</string>
 </resources>

@@ -206,4 +206,14 @@
         <item >4</item>
         <item >5</item>
     </string-array>
+
+    <string-array name="displayModeOption">
+        <item>@string/display_mode_overlay</item>
+        <item>@string/display_mode_split</item>
+    </string-array>
+
+    <string-array name="displayModeOptionValue" translatable="false">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
 </resources>

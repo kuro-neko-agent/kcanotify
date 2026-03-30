@@ -921,4 +921,9 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="mitm_addon_update_available">A new mitm addon update is available.</string>
     <string name="mitm_addon_new_version">The kcanotify mitm addon must be updated</string>
     <string name="mitm_doze_notice">Battery optimization may interfere with the mitm addon</string>
+
+    <string name="setting_menu_view_title_display_mode">Display Mode</string>
+    <string name="setting_menu_view_desc_display_mode">Choose how fleet info is displayed</string>
+    <string name="display_mode_overlay">Overlay</string>
+    <string name="display_mode_split">Split Screen</string>
 </resources>

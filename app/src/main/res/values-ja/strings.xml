@@ -843,4 +843,9 @@
     <string name="mitm_addon_update_available">新しいmitm addonアップデートをインストールできます。</string>
     <string name="mitm_addon_new_version">mitm addonのアップデートが必要です。</string>
     <string name="mitm_doze_notice">バッテリー最適化機能がmitm addonに干渉する可能性があります。</string>
+
+    <string name="setting_menu_view_title_display_mode">表示モード</string>
+    <string name="setting_menu_view_desc_display_mode">艦隊情報の表示方法を選択</string>
+    <string name="display_mode_overlay">オーバーレイ</string>
+    <string name="display_mode_split">分割画面</string>
 </resources>

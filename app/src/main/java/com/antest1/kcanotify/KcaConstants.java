@@ -516,6 +516,11 @@ public final class KcaConstants {
     public static final String NOTI_SOUND_KIND_VIBRATE = "vibrate";
     public static final String NOTI_SOUND_KIND_MUTE = "mute";
 
+    public static final String PREF_DISPLAY_MODE = "display_mode";
+
+    public static final String DISPLAY_MODE_OVERLAY = "0";
+    public static final String DISPLAY_MODE_SPLIT = "1";
+
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";
@@ -601,7 +606,8 @@ public final class KcaConstants {
             PREF_FV_ITEM_4,
             PREF_NOTI_TEST_SHOW,
             PREF_USE_TLS_DECRYPTION,
-            PREF_VPNSERVICE_USAGE_AGREE
+            PREF_VPNSERVICE_USAGE_AGREE,
+            PREF_DISPLAY_MODE
     };
 
     public static final String[] PREF_BOOLEAN_ARRAY = {

@@ -113,6 +113,7 @@ public class SettingActivity extends BaseActivity implements MainPreferenceFragm
                 return "|";
             case PREF_SHIPINFO_SORTKEY:
                 return "|1,true|";
+            case PREF_DISPLAY_MODE:
             case PREF_FAIRY_ICON:
             case PREF_KCA_EXP_TYPE:
             case PREF_VIEW_YLOC:
