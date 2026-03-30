@@ -271,6 +271,19 @@
     <PreferenceCategory
         android:title="@string/setting_menu_view_head"
         app:iconSpaceReserved="false">
+
+        <ListPreference
+            android:id="@+id/display_mode_value"
+            app:iconSpaceReserved="false"
+            android:defaultValue="0"
+            android:entries="@array/displayModeOption"
+            android:entryValues="@array/displayModeOptionValue"
+            android:key="display_mode"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/setting_menu_view_desc_display_mode"
+            android:title="@string/setting_menu_view_title_display_mode" />
+
         <CheckBoxPreference
             android:defaultValue="true"
             app:iconSpaceReserved="false"

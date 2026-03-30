@@ -848,4 +848,9 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="mitm_addon_update_available">有新的 mitm 外掛程式更新可用。 </string>
     <string name="mitm_addon_new_version">必須更新 kcanotify mitm 外掛程式</string>
     <string name="mitm_doze_notice">電池最佳化可能會幹擾 mitm 外掛程式</string>
+
+    <string name="setting_menu_view_title_display_mode">顯示模式</string>
+    <string name="setting_menu_view_desc_display_mode">選擇艦隊資訊的顯示方式</string>
+    <string name="display_mode_overlay">懸浮視窗</string>
+    <string name="display_mode_split">分割畫面</string>
 </resources>

@@ -843,4 +843,9 @@
     <string name="mitm_addon_update_available">새로운 mitm addon 업데이트를 설치할 수 있습니다.</string>
     <string name="mitm_addon_new_version">mitm addon의 업데이트가 필요합니다.</string>
     <string name="mitm_doze_notice">배터리 최적화 기능이 mitm addon과 충돌할 수 있습니다.</string>
+
+    <string name="setting_menu_view_title_display_mode">표시 모드</string>
+    <string name="setting_menu_view_desc_display_mode">함대 정보 표시 방식 선택</string>
+    <string name="display_mode_overlay">오버레이</string>
+    <string name="display_mode_split">분할 화면</string>
 </resources>
