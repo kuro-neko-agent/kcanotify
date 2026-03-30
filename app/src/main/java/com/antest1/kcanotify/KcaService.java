@@ -2638,9 +2638,14 @@ public class KcaService extends BaseService {
                 .setAction(REFRESH_QUESTVIEW_ACTION));
     }
 
+    public static final String BROADCAST_REFRESH_FLEETVIEW = "com.antest1.kcanotify.REFRESH_FLEETVIEW";
+
     public void updateFleetView() {
         startService(new Intent(getBaseContext(), KcaFleetViewService.class)
                 .setAction(REFRESH_FLEETVIEW_ACTION));
+        // Also broadcast for FleetPanelActivity (split-screen mode)
+        LocalBroadcastManager.getInstance(getBaseContext())
+                .sendBroadcast(new Intent(BROADCAST_REFRESH_FLEETVIEW));
     }
 
     public void updateAirbasePopupInfo() {
