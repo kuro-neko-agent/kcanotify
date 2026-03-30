@@ -59,6 +59,8 @@ import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_OPACITY;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_RANDOM;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_REV;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_SIZE;
+import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
+import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_BATTLEVIEW_USE;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_NOTI_QUEST_FAIRY_GLOW;
 import static com.antest1.kcanotify.KcaUtils.doVibrate;
@@ -345,6 +347,11 @@ public class KcaViewButtonService extends BaseService {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
+                // Also close FleetPanelActivity if in split-screen mode
+                if (isSplitScreenMode()) {
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                }
                 battleviewEnabled = true;
             }
             if (intent.getAction().equals(DEACTIVATE_BATTLEVIEW_ACTION)) {
@@ -355,6 +362,11 @@ public class KcaViewButtonService extends BaseService {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
+                // Also close FleetPanelActivity if in split-screen mode
+                if (isSplitScreenMode()) {
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                }
                 questviewEnabled = true;
             }
             if (intent.getAction().equals(DEACTIVATE_QUESTVIEW_ACTION)) {
@@ -562,6 +574,11 @@ public class KcaViewButtonService extends BaseService {
         }
     };
 
+    private boolean isSplitScreenMode() {
+        return DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE));
+    }
+
     private final View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -575,7 +592,13 @@ public class KcaViewButtonService extends BaseService {
                     Intent qintent = new Intent(getBaseContext(), KcaQuestViewService.class);
                     qintent.setAction(KcaQuestViewService.SHOW_QUESTVIEW_ACTION_NEW);
                     startService(qintent);
+                } else if (isSplitScreenMode()) {
+                    // Split-screen mode: launch FleetPanelActivity (Q1: fairy stays visible, tap opens panel)
+                    Intent activityIntent = new Intent(getBaseContext(), FleetPanelActivity.class);
+                    activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(activityIntent);
                 } else {
+                    // Overlay mode (default)
                     Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                     qintent.setAction(KcaFleetViewService.SHOW_FLEETVIEW_ACTION);
                     startService(qintent);
