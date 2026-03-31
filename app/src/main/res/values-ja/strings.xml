@@ -848,4 +848,7 @@
     <string name="setting_menu_view_desc_display_mode">艦隊情報の表示方法を選択</string>
     <string name="display_mode_overlay">オーバーレイ</string>
     <string name="display_mode_split">分割画面</string>
+    <string name="setting_menu_view_title_auto_launch">パネル自動起動</string>
+    <string name="setting_menu_view_desc_auto_launch">データ受信時に自動的に艦隊パネルを開く（分割画面モードのみ）</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">分割画面モードでのみ利用可能</string>
 </resources>

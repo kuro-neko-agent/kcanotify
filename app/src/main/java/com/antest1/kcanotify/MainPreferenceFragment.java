@@ -37,6 +37,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -202,6 +203,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         setActiveSnifferSettingEnabled(KC_PACKAGE_NAME.equals(kca_package) || sniffer_mode == SNIFFER_ACTIVE);
 
         setSettingDisabledWhenServiceRunning();
+        updateAutoLaunchAvailability();
     }
 
     @Override
@@ -419,6 +421,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
                     getContext().startService(closeOverlay);
                     LocalBroadcastManager.getInstance(getContext())
                             .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                    updateAutoLaunchAvailability();
                     break;
                 case PREF_FAIRY_OPACITY:
                     kca_url = KCA_API_PREF_FAIRYALPHA_CHANGED;
@@ -454,6 +457,29 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
 
         if (PREF_KCA_NOTI_SOUND_KIND.equals(key)) {
             callbackAlertRingtoneResult(null);
+        }
+    }
+
+    /**
+     * Update auto_launch preference enabled state and summary based on current display mode.
+     * Uses setEnabled() + summary update (not setVisible) for better discoverability.
+     * Non-split mode: greyed out with "only available in split-screen" hint.
+     */
+    private void updateAutoLaunchAvailability() {
+        CheckBoxPreference autoLaunchPref =
+                (CheckBoxPreference) findPreference(PREF_PANEL_AUTO_LAUNCH);
+        if (autoLaunchPref != null) {
+            String displayMode = getStringPreferences(getContext(), PREF_DISPLAY_MODE);
+            boolean isSplit = DISPLAY_MODE_SPLIT.equals(displayMode);
+            autoLaunchPref.setEnabled(isSplit);
+            if (!isSplit) {
+                autoLaunchPref.setSummary(R.string.setting_menu_view_desc_auto_launch_disabled);
+                if (autoLaunchPref.isChecked()) {
+                    autoLaunchPref.setChecked(false);
+                }
+            } else {
+                autoLaunchPref.setSummary(R.string.setting_menu_view_desc_auto_launch);
+            }
         }
     }
 

@@ -285,6 +285,13 @@
             android:title="@string/setting_menu_view_title_display_mode" />
 
         <CheckBoxPreference
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"
+            android:key="panel_auto_launch"
+            android:summary="@string/setting_menu_view_desc_auto_launch"
+            android:title="@string/setting_menu_view_title_auto_launch" />
+
+        <CheckBoxPreference
             android:defaultValue="true"
             app:iconSpaceReserved="false"
             android:key="battlenode_use"

@@ -386,6 +386,13 @@ public class KcaViewButtonService extends BaseService {
                 questviewEnabled = false;
                 reopenFleetPanelIfNeeded();
             }
+            if (intent.getAction().equals(AUTO_LAUNCH_PANEL_ACTION)) {
+                // Auto-launch: only when battle/quest views are not active
+                // (their reopen is handled by reopenFleetPanelIfNeeded)
+                if (!battleviewEnabled && !questviewEnabled) {
+                    launchFleetPanelActivity(null);
+                }
+            }
 
         }
         return super.onStartCommand(intent, flags, startId);

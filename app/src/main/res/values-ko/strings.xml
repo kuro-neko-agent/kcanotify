@@ -848,4 +848,7 @@
     <string name="setting_menu_view_desc_display_mode">함대 정보 표시 방식 선택</string>
     <string name="display_mode_overlay">오버레이</string>
     <string name="display_mode_split">분할 화면</string>
+    <string name="setting_menu_view_title_auto_launch">패널 자동 실행</string>
+    <string name="setting_menu_view_desc_auto_launch">데이터 수신 시 자동으로 함대 패널 열기 (분할 화면 모드 전용)</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">분할 화면 모드에서만 사용 가능</string>
 </resources>

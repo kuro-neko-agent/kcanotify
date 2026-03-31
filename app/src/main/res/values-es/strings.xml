@@ -851,4 +851,7 @@
     <string name="setting_menu_view_desc_display_mode">Elija cómo se muestra la información de flota</string>
     <string name="display_mode_overlay">Superposición</string>
     <string name="display_mode_split">Pantalla dividida</string>
+    <string name="setting_menu_view_title_auto_launch">Inicio Automático del Panel</string>
+    <string name="setting_menu_view_desc_auto_launch">Abrir automáticamente el panel de flota cuando se reciban datos (solo en modo de pantalla dividida)</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">Solo disponible en modo de pantalla dividida</string>
 </resources>

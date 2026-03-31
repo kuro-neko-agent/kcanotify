@@ -997,6 +997,7 @@ public class KcaService extends BaseService {
                     }
                     runTimer();
                     updateFleetView();
+                    autoLaunchFleetPanelIfNeeded();
                     isInBattle = false;
                 }
 
@@ -2646,6 +2647,28 @@ public class KcaService extends BaseService {
         // Also broadcast for FleetPanelActivity (split-screen mode)
         LocalBroadcastManager.getInstance(getBaseContext())
                 .sendBroadcast(new Intent(BROADCAST_REFRESH_FLEETVIEW));
+    }
+
+    /**
+     * If auto-launch mode is enabled and in split-screen, launch FleetPanelActivity.
+     * Only called on port API return, ensuring data is ready.
+     */
+    private void autoLaunchFleetPanelIfNeeded() {
+        if (!DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))) {
+            return;
+        }
+        if (!getBooleanPreferences(getApplicationContext(), PREF_PANEL_AUTO_LAUNCH)) {
+            return;
+        }
+        // Skip if panel is already open
+        if (FleetPanelActivity.isFleetPanelOpen) {
+            return;
+        }
+        // Delegate to KcaViewButtonService to keep launch logic centralized
+        Intent intent = new Intent(this, KcaViewButtonService.class);
+        intent.setAction(KcaViewButtonService.AUTO_LAUNCH_PANEL_ACTION);
+        startService(intent);
     }
 
     public void updateAirbasePopupInfo() {
