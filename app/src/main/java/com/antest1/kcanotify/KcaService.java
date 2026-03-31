@@ -1192,10 +1192,14 @@ public class KcaService extends BaseService {
                             KcaBattle.setDeckPortData(api_data);
                             KcaBattle.setStartHeavyDamageExist(checkvalue);
 
-                            if (isBattleViewEnabled() &&Settings.canDrawOverlays(getApplicationContext())) {
+                            if (isBattleViewEnabled() && Settings.canDrawOverlays(getApplicationContext())) {
                                 startService(new Intent(this, KcaViewButtonService.class)
                                         .setAction(KcaViewButtonService.ACTIVATE_BATTLEVIEW_ACTION));
-                                startService(new Intent(this, KcaBattleViewService.class));
+                                // In split-pane mode, BattleFragment handles display;
+                                // skip starting the overlay service
+                                if (!isSplitPaneMode()) {
+                                    startService(new Intent(this, KcaBattleViewService.class));
+                                }
                             }
                         }
                         KcaBattle.processData(dbHelper, url, battleApiData);
@@ -2418,6 +2422,12 @@ public class KcaService extends BaseService {
 
     private boolean isBattleViewEnabled() {
         return getBooleanPreferences(getApplicationContext(), PREF_KCA_BATTLEVIEW_USE);
+    }
+
+    private boolean isSplitPaneMode() {
+        return DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))
+                && getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
     }
 
     private boolean isBattleNodeEnabled() {

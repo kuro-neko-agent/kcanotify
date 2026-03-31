@@ -535,6 +535,10 @@ public final class KcaConstants {
     // --- Phase 8D: 内部左右分屏 ---
     public static final String PREF_SPLIT_PANE_ENABLED = "split_pane_enabled";
 
+    // Broadcasts for split-pane mode: route battle/quest to Fragment instead of overlay
+    public static final String BROADCAST_SHOW_BATTLE_FRAGMENT = "com.antest1.kcanotify.SHOW_BATTLE_FRAGMENT";
+    public static final String BROADCAST_SHOW_QUEST_FRAGMENT = "com.antest1.kcanotify.SHOW_QUEST_FRAGMENT";
+
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";

@@ -52,6 +52,8 @@ import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SEEK_CN;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SWITCH_STATUS;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
 import static com.antest1.kcanotify.KcaConstants.PREF_SPLIT_PANE_ENABLED;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_BATTLE_FRAGMENT;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_QUEST_FRAGMENT;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -104,7 +106,10 @@ public class FleetPanelActivity extends BaseActivity {
 
     private BroadcastReceiver refreshReceiver;
     private BroadcastReceiver closeReceiver;
+    private BroadcastReceiver showBattleReceiver;
+    private BroadcastReceiver showQuestReceiver;
     private boolean closedByBroadcast = false;
+    private boolean splitPaneEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,7 +184,7 @@ public class FleetPanelActivity extends BaseActivity {
         }
 
         // Add fleetContentView to the appropriate container
-        boolean splitPaneEnabled = getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+        splitPaneEnabled = getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
 
         if (splitPaneEnabled) {
             // New path: SlidingPaneLayout
@@ -252,6 +257,11 @@ public class FleetPanelActivity extends BaseActivity {
         closeReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                if (splitPaneEnabled) {
+                    // In split-pane mode, don't close — switch to battle tab instead
+                    switchToTab(RightPanePagerAdapter.TAB_BATTLE);
+                    return;
+                }
                 // Save current state for restoration after battle/quest ends
                 savePanelStateToPrefs();
 
@@ -263,6 +273,28 @@ public class FleetPanelActivity extends BaseActivity {
                 finish();
             }
         };
+
+        // Split-pane broadcast receivers for tab switching
+        if (splitPaneEnabled) {
+            showBattleReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    switchToTab(RightPanePagerAdapter.TAB_BATTLE);
+                    // Tell BattleFragment to refresh
+                    androidx.fragment.app.Fragment f = getSupportFragmentManager()
+                            .findFragmentByTag("f" + RightPanePagerAdapter.TAB_BATTLE);
+                    if (f instanceof BattleFragment) {
+                        ((BattleFragment) f).refreshBattleData();
+                    }
+                }
+            };
+            showQuestReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    switchToTab(RightPanePagerAdapter.TAB_QUEST);
+                }
+            };
+        }
     }
 
     private void setupClickListeners() {
@@ -720,6 +752,12 @@ public class FleetPanelActivity extends BaseActivity {
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.registerReceiver(refreshReceiver, new IntentFilter(BROADCAST_REFRESH_FLEETVIEW));
         lbm.registerReceiver(closeReceiver, new IntentFilter(CLOSE_FLEET_PANEL_ACTION));
+        if (showBattleReceiver != null) {
+            lbm.registerReceiver(showBattleReceiver, new IntentFilter(BROADCAST_SHOW_BATTLE_FRAGMENT));
+        }
+        if (showQuestReceiver != null) {
+            lbm.registerReceiver(showQuestReceiver, new IntentFilter(BROADCAST_SHOW_QUEST_FRAGMENT));
+        }
 
         // Refresh data from DB
         refreshFleetData();
@@ -736,6 +774,12 @@ public class FleetPanelActivity extends BaseActivity {
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.unregisterReceiver(refreshReceiver);
         lbm.unregisterReceiver(closeReceiver);
+        if (showBattleReceiver != null) {
+            lbm.unregisterReceiver(showBattleReceiver);
+        }
+        if (showQuestReceiver != null) {
+            lbm.unregisterReceiver(showQuestReceiver);
+        }
     }
 
     @Override
