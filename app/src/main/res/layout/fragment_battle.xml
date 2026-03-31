@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="16dp"
-            android:text="Waiting for battle..."
+            android:text="@string/panel_no_battle_data"
             android:textColor="@color/white"
             android:textSize="14sp"
             android:visibility="visible" />

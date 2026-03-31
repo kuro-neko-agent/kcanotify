@@ -856,4 +856,41 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="setting_menu_view_title_auto_launch">自動啟動面板</string>
     <string name="setting_menu_view_desc_auto_launch">收到資料時自動開啟艦隊面板（僅分割畫面模式）</string>
     <string name="setting_menu_view_desc_auto_launch_disabled">僅在分割畫面顯示模式下可用</string>
+
+    <!-- Phase 8D: Split pane settings -->
+    <string name="settings_split_pane_enabled">分割面板模式</string>
+    <string name="settings_split_pane_enabled_summary">左側顯示資訊面板，右側顯示詳細標籤</string>
+    <string name="settings_auto_tab_switch">自動切換標籤</string>
+    <string name="settings_auto_tab_switch_summary">根據遊戲API自動切換標籤</string>
+    <string name="settings_auto_tab_battle">出擊時切換到戰鬥標籤</string>
+    <string name="settings_auto_tab_quest">查看任務列表時切換到任務標籤</string>
+
+    <!-- Phase 8D: Tab titles -->
+    <string name="panel_tab_battle">戰鬥</string>
+    <string name="panel_tab_quest">任務</string>
+    <string name="panel_tab_equip">裝備</string>
+    <string name="panel_tab_menu">選單</string>
+
+    <!-- Phase 8D: Left pane section titles -->
+    <string name="panel_section_resource">資源</string>
+    <string name="panel_section_fleet">艦隊</string>
+    <string name="panel_section_quest_track">任務追蹤</string>
+
+    <!-- Phase 8D: Empty states -->
+    <string name="panel_no_battle_data">無戰鬥資料</string>
+    <string name="panel_no_quest_data">無任務資料</string>
+    <string name="panel_no_tracked_quest">無追蹤任務</string>
+
+    <!-- Phase 8D: Resource labels -->
+    <string name="panel_res_fuel">燃料 </string>
+    <string name="panel_res_ammo">彈藥 </string>
+    <string name="panel_res_steel">鋼材 </string>
+    <string name="panel_res_baux">鋁土 </string>
+    <string name="panel_res_build">建造 </string>
+    <string name="panel_res_repair">修復 </string>
+    <string name="panel_res_dev">開發 </string>
+    <string name="panel_res_screw">螺絲 </string>
+
+    <!-- Phase 8D: Equip placeholder -->
+    <string name="panel_equip_coming_soon">即將推出</string>
 </resources>

@@ -586,7 +586,12 @@ public class FleetPanelActivity extends BaseActivity {
         pagerAdapter = new RightPanePagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
 
-        String[] tabTitles = {"Battle", "Quest", "Equip", "Menu"};
+        String[] tabTitles = {
+            getString(R.string.panel_tab_battle),
+            getString(R.string.panel_tab_quest),
+            getString(R.string.panel_tab_equip),
+            getString(R.string.panel_tab_menu)
+        };
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             if (position < tabTitles.length) {
                 tab.setText(tabTitles[position]);
@@ -628,7 +633,12 @@ public class FleetPanelActivity extends BaseActivity {
             R.id.res_fuel, R.id.res_ammo, R.id.res_steel, R.id.res_bauxite,
             R.id.res_instant_build, R.id.res_instant_repair, R.id.res_dev_material, R.id.res_screw
         };
-        String[] labels = {"Fuel ", "Ammo ", "Steel ", "Baux ", "Build ", "Repair ", "Dev ", "Screw "};
+        String[] labels = {
+            getString(R.string.panel_res_fuel), getString(R.string.panel_res_ammo),
+            getString(R.string.panel_res_steel), getString(R.string.panel_res_baux),
+            getString(R.string.panel_res_build), getString(R.string.panel_res_repair),
+            getString(R.string.panel_res_dev), getString(R.string.panel_res_screw)
+        };
 
         for (int i = 0; i < Math.min(material.size(), resIds.length); i++) {
             TextView tv = leftPaneView.findViewById(resIds[i]);
@@ -654,7 +664,7 @@ public class FleetPanelActivity extends BaseActivity {
         JsonArray questList = dbHelper.getCurrentQuestList();
         if (questList == null || questList.size() == 0) {
             TextView emptyText = new TextView(this);
-            emptyText.setText("No tracked quests");
+            emptyText.setText(getString(R.string.panel_no_tracked_quest));
             emptyText.setTextColor(getResources().getColor(R.color.white));
             emptyText.setTextSize(11);
             emptyText.setPadding(4, 4, 4, 4);

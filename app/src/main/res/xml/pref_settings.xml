@@ -291,6 +291,37 @@
             android:summary="@string/setting_menu_view_desc_auto_launch"
             android:title="@string/setting_menu_view_title_auto_launch" />
 
+        <!-- Phase 8D: Split pane mode -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"
+            android:key="split_pane_enabled"
+            android:title="@string/settings_split_pane_enabled"
+            android:summary="@string/settings_split_pane_enabled_summary" />
+
+        <!-- Phase 8D: API auto tab switch -->
+        <CheckBoxPreference
+            android:defaultValue="true"
+            app:iconSpaceReserved="false"
+            android:key="auto_tab_switch"
+            android:title="@string/settings_auto_tab_switch"
+            android:summary="@string/settings_auto_tab_switch_summary"
+            android:dependency="split_pane_enabled" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            app:iconSpaceReserved="false"
+            android:key="auto_tab_switch_battle"
+            android:title="@string/settings_auto_tab_battle"
+            android:dependency="auto_tab_switch" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            app:iconSpaceReserved="false"
+            android:key="auto_tab_switch_quest"
+            android:title="@string/settings_auto_tab_quest"
+            android:dependency="auto_tab_switch" />
+
         <CheckBoxPreference
             android:defaultValue="true"
             app:iconSpaceReserved="false"
