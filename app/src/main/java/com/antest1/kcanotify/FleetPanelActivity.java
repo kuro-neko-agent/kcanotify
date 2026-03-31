@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_DECKPORT;
+import static com.antest1.kcanotify.KcaConstants.DB_KEY_STARTDATA;
 import static com.antest1.kcanotify.KcaConstants.KCANOTIFY_DB_VERSION;
 import static com.antest1.kcanotify.KcaConstants.PREF_FV_MENU_ORDER;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -89,6 +90,15 @@ public class FleetPanelActivity extends BaseActivity {
         dbHelper = new KcaDBHelper(getApplicationContext(), null, KCANOTIFY_DB_VERSION);
         dbHelper.updateExpScore(0);
         KcaApiData.setDBHelper(dbHelper);
+
+        // Restore static game data after process death
+        if (!KcaApiData.isGameDataLoaded()) {
+            JsonObject kcDataObj = dbHelper.getJsonObjectValue(DB_KEY_STARTDATA);
+            if (kcDataObj != null && kcDataObj.has("api_data")) {
+                KcaApiData.getKcGameData(kcDataObj.getAsJsonObject("api_data"));
+                KcaApiData.loadTranslationData(getApplicationContext());
+            }
+        }
 
         deckInfoCalc = new KcaDeckInfo(contextWithTheme);
         JsonObject gunfitData = FleetDataManager.loadGunfitData(getAssets());
@@ -450,6 +460,14 @@ public class FleetPanelActivity extends BaseActivity {
     }
 
     private void refreshFleetData() {
+        // Restore isReady flag after process death if DB has deckport data
+        if (!KcaFleetViewService.isReady) {
+            JsonArray deckport = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
+            if (deckport != null && deckport.size() > 0) {
+                KcaFleetViewService.setReadyFlag(true);
+            }
+        }
+
         fleetDataManager.setSelectedFleetIndex(selectedFleetIndex);
         fleetDataManager.setSwitchStatus(switch_status);
         fleetDataManager.setSeekCnInternal(seekcn_internal);
