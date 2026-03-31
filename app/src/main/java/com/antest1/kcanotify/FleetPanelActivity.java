@@ -54,6 +54,8 @@ import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
 import static com.antest1.kcanotify.KcaConstants.PREF_SPLIT_PANE_ENABLED;
 import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_BATTLE_FRAGMENT;
 import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_QUEST_FRAGMENT;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_TAB_SWITCH;
+import static com.antest1.kcanotify.KcaConstants.EXTRA_TAB_INDEX;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -108,6 +110,7 @@ public class FleetPanelActivity extends BaseActivity {
     private BroadcastReceiver closeReceiver;
     private BroadcastReceiver showBattleReceiver;
     private BroadcastReceiver showQuestReceiver;
+    private BroadcastReceiver tabSwitchReceiver;
     private boolean closedByBroadcast = false;
     private boolean splitPaneEnabled = false;
 
@@ -292,6 +295,15 @@ public class FleetPanelActivity extends BaseActivity {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     switchToTab(RightPanePagerAdapter.TAB_QUEST);
+                }
+            };
+            tabSwitchReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int tabIndex = intent.getIntExtra(EXTRA_TAB_INDEX, -1);
+                    if (tabIndex >= 0) {
+                        switchToTab(tabIndex);
+                    }
                 }
             };
         }
@@ -758,6 +770,9 @@ public class FleetPanelActivity extends BaseActivity {
         if (showQuestReceiver != null) {
             lbm.registerReceiver(showQuestReceiver, new IntentFilter(BROADCAST_SHOW_QUEST_FRAGMENT));
         }
+        if (tabSwitchReceiver != null) {
+            lbm.registerReceiver(tabSwitchReceiver, new IntentFilter(BROADCAST_TAB_SWITCH));
+        }
 
         // Refresh data from DB
         refreshFleetData();
@@ -779,6 +794,9 @@ public class FleetPanelActivity extends BaseActivity {
         }
         if (showQuestReceiver != null) {
             lbm.unregisterReceiver(showQuestReceiver);
+        }
+        if (tabSwitchReceiver != null) {
+            lbm.unregisterReceiver(tabSwitchReceiver);
         }
     }
 

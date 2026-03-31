@@ -539,6 +539,16 @@ public final class KcaConstants {
     public static final String BROADCAST_SHOW_BATTLE_FRAGMENT = "com.antest1.kcanotify.SHOW_BATTLE_FRAGMENT";
     public static final String BROADCAST_SHOW_QUEST_FRAGMENT = "com.antest1.kcanotify.SHOW_QUEST_FRAGMENT";
 
+    // --- Phase 8D: API auto tab switch ---
+    public static final String BROADCAST_TAB_SWITCH =
+            "com.antest1.kcanotify.TAB_SWITCH";
+    public static final String EXTRA_TAB_INDEX = "tab_index";
+
+    // 2-level toggle: master + per-API
+    public static final String PREF_AUTO_TAB_SWITCH = "auto_tab_switch";
+    public static final String PREF_AUTO_TAB_BATTLE = "auto_tab_switch_battle";
+    public static final String PREF_AUTO_TAB_QUEST = "auto_tab_switch_quest";
+
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";
