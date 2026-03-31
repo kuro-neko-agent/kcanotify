@@ -890,8 +890,10 @@ public class KcaService extends BaseService {
                 startService(new Intent(this, KcaViewButtonService.class)
                         .setAction(KcaViewButtonService.DEACTIVATE_QUESTVIEW_ACTION));
                 KcaQuestViewService.setQuestMode(false);
-                startService(new Intent(this, KcaQuestViewService.class)
-                        .setAction(KcaQuestViewService.CLOSE_QUESTVIEW_ACTION));
+                if (!isSplitPaneMode()) {
+                    startService(new Intent(this, KcaQuestViewService.class)
+                            .setAction(KcaQuestViewService.CLOSE_QUESTVIEW_ACTION));
+                }
                 updateQuestView();
             }
 
@@ -908,12 +910,17 @@ public class KcaService extends BaseService {
                         break;
                     }
                 }
-                if (Settings.canDrawOverlays(getApplicationContext())
-                        && jsonDataObj.has("api_data")) {
+                if (jsonDataObj.has("api_data")) {
                     JsonObject api_data = jsonDataObj.getAsJsonObject("api_data");
                     KcaQuestViewService.setApiData(api_data);
-                    startService(new Intent(getBaseContext(), KcaQuestViewService.class)
-                            .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
+                    if (isSplitPaneMode()) {
+                        // Route to QuestFragment via broadcast
+                        LocalBroadcastManager.getInstance(getBaseContext())
+                                .sendBroadcast(new Intent(KCA_MSG_QUEST_VIEW_LIST));
+                    } else if (Settings.canDrawOverlays(getApplicationContext())) {
+                        startService(new Intent(getBaseContext(), KcaQuestViewService.class)
+                                .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
+                    }
                 }
                 sendQuestCompletionInfo();
                 return;

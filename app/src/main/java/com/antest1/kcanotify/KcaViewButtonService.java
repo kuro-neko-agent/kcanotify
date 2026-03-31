@@ -382,8 +382,11 @@ public class KcaViewButtonService extends BaseService {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
-                // Also close FleetPanelActivity if in split-screen mode
-                if (isSplitScreenMode()) {
+                if (isSplitScreenMode() && isSplitPaneEnabled()) {
+                    // Split-pane mode: switch to Quest tab instead of closing panel
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(BROADCAST_SHOW_QUEST_FRAGMENT));
+                } else if (isSplitScreenMode()) {
                     LocalBroadcastManager.getInstance(getBaseContext())
                             .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
                 }
