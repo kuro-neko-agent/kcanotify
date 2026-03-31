@@ -867,6 +867,9 @@ public class KcaService extends BaseService {
                     currentNodeInfo = KcaApiData.getNodeFullInfo(this, currentNodeAlphabet, api_event_id, api_event_kind, api_color_no, false);
                     showCustomToast(currentNodeInfo, Toast.LENGTH_LONG, getNodeColor(getApplicationContext(), api_event_id, api_event_kind, api_color_no));
                 }
+                if (url.startsWith(API_REQ_MAP_START) && isSplitPaneMode()) {
+                    sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_BATTLE);
+                }
             }
 
             if (url.startsWith(API_GET_MEMBER_SLOT_ITEM)) {
@@ -921,6 +924,9 @@ public class KcaService extends BaseService {
                         startService(new Intent(getBaseContext(), KcaQuestViewService.class)
                                 .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
                     }
+                }
+                if (isSplitPaneMode()) {
+                    sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_QUEST);
                 }
                 sendQuestCompletionInfo();
                 return;
@@ -2435,6 +2441,24 @@ public class KcaService extends BaseService {
         return DISPLAY_MODE_SPLIT.equals(
                 getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))
                 && getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+    }
+
+    /** Send tab switch broadcast with 2-level toggle check */
+    private void sendTabSwitchBroadcast(int tabIndex) {
+        if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_SWITCH)) return;
+
+        switch (tabIndex) {
+            case RightPanePagerAdapter.TAB_BATTLE:
+                if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_BATTLE)) return;
+                break;
+            case RightPanePagerAdapter.TAB_QUEST:
+                if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_QUEST)) return;
+                break;
+        }
+
+        Intent intent = new Intent(BROADCAST_TAB_SWITCH);
+        intent.putExtra(EXTRA_TAB_INDEX, tabIndex);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private boolean isBattleNodeEnabled() {
