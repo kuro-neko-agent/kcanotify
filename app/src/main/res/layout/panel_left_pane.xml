@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Section 1: Resource overview -->
+        <include layout="@layout/panel_section_resource" />
+
+        <!-- Section 2: Fleet info -->
+        <include layout="@layout/panel_section_fleet" />
+
+        <!-- Section 3: Quest tracking -->
+        <include layout="@layout/panel_section_quest_track" />
+
+    </LinearLayout>
+</ScrollView>
