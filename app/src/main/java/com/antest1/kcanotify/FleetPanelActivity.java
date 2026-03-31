@@ -35,7 +35,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_DECKPORT;
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_STARTDATA;
+import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
 import static com.antest1.kcanotify.KcaConstants.KCANOTIFY_DB_VERSION;
+import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
 import static com.antest1.kcanotify.KcaConstants.PREF_FV_MENU_ORDER;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
 import static com.antest1.kcanotify.KcaFleetViewService.DECKINFO_REQ_LIST;
@@ -504,6 +506,14 @@ public class FleetPanelActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // If user switched back to Overlay mode in settings, close this Activity
+        if (!DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))) {
+            finish();
+            return;
+        }
+
         // Register broadcast receivers
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.registerReceiver(refreshReceiver, new IntentFilter(BROADCAST_REFRESH_FLEETVIEW));
