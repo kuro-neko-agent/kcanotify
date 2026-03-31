@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
@@ -53,6 +54,8 @@ import static com.antest1.kcanotify.KcaConstants.KCA_MSG_BATTLE_NODE;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_BATTLE_VIEW_REFRESH;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_DATA;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_COMPLETE;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_AUTO_LAUNCH;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_ICON;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_NOTI_LONGCLICK;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_OPACITY;
@@ -90,6 +93,15 @@ public class KcaViewButtonService extends BaseService {
     public static final String DEACTIVATE_BATTLEVIEW_ACTION = "deactivate_battleview";
     public static final String ACTIVATE_QUESTVIEW_ACTION = "activate_questview";
     public static final String DEACTIVATE_QUESTVIEW_ACTION = "deactivate_questview";
+    public static final String AUTO_LAUNCH_PANEL_ACTION = "auto_launch_panel";
+
+    /** Delay before reopening FleetPanelActivity after battle/quest ends.
+     *  DEACTIVATE_BATTLEVIEW_ACTION and stopService(KcaBattleViewService) are sent nearly simultaneously.
+     *  BattleViewService.onDestroy() needs to remove overlay views from WindowManager.
+     *  WindowManager.removeView() itself takes ~16ms (one frame), but Service stop scheduling + GC
+     *  need extra time. 300ms provides sufficient margin, covering low-end device scenarios.
+     */
+    private static final long PANEL_REOPEN_DELAY_MS = 300L;
 
     private LocalBroadcastManager broadcaster;
     private BroadcastReceiver battleinfo_receiver;
@@ -464,6 +476,7 @@ public class KcaViewButtonService extends BaseService {
 
     @Override
     public void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battleinfo_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlenode_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlehdmg_receiver);
@@ -577,6 +590,26 @@ public class KcaViewButtonService extends BaseService {
     private boolean isSplitScreenMode() {
         return DISPLAY_MODE_SPLIT.equals(
                 getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE));
+    }
+
+    /**
+     * Launch FleetPanelActivity in split-screen mode.
+     * Shared by Task 2 (battle/quest end reopen) and Task 7 (auto-launch).
+     *
+     * @param extras optional Intent extras (e.g., for restoring fleet index)
+     */
+    private void launchFleetPanelActivity(@Nullable Bundle extras) {
+        if (!isSplitScreenMode()) return;
+
+        // Skip if panel is already open to avoid unnecessary startActivity calls
+        if (FleetPanelActivity.isFleetPanelOpen) return;
+
+        Intent intent = new Intent(getBaseContext(), FleetPanelActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (extras != null) {
+            intent.putExtras(extras);
+        }
+        startActivity(intent);
     }
 
     private final View.OnClickListener clickListener = new View.OnClickListener() {
