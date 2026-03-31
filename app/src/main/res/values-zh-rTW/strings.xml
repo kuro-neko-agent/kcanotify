@@ -853,4 +853,7 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="setting_menu_view_desc_display_mode">選擇艦隊資訊的顯示方式</string>
     <string name="display_mode_overlay">懸浮視窗</string>
     <string name="display_mode_split">分割畫面</string>
+    <string name="setting_menu_view_title_auto_launch">自動啟動面板</string>
+    <string name="setting_menu_view_desc_auto_launch">收到資料時自動開啟艦隊面板（僅分割畫面模式）</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">僅在分割畫面顯示模式下可用</string>
 </resources>
