@@ -23,6 +23,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.slidingpanelayout.widget.SlidingPaneLayout;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -43,6 +44,7 @@ import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_FLEET_INDEX;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SEEK_CN;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SWITCH_STATUS;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
+import static com.antest1.kcanotify.KcaConstants.PREF_SPLIT_PANE_ENABLED;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -52,6 +54,7 @@ import static com.antest1.kcanotify.KcaFleetViewService.fleetview_menu_keys;
 import static com.antest1.kcanotify.KcaService.BROADCAST_REFRESH_FLEETVIEW;
 import static com.antest1.kcanotify.KcaUseStatConstant.FV_BTN_PRESS;
 import static com.antest1.kcanotify.KcaUtils.getId;
+import static com.antest1.kcanotify.KcaUtils.getBooleanPreferences;
 import static com.antest1.kcanotify.KcaUtils.getStringPreferences;
 import static com.antest1.kcanotify.KcaUtils.sendUserAnalytics;
 
@@ -164,9 +167,21 @@ public class FleetPanelActivity extends BaseActivity {
             }
         }
 
-        // Add to the activity's root
-        FrameLayout root = findViewById(R.id.fleet_panel_root);
-        root.addView(fleetContentView);
+        // Add fleetContentView to the appropriate container
+        boolean splitPaneEnabled = getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+
+        if (splitPaneEnabled) {
+            // New path: SlidingPaneLayout
+            SlidingPaneLayout slidingPane = findViewById(R.id.sliding_pane_layout);
+            slidingPane.setVisibility(View.VISIBLE);
+            FrameLayout leftPane = findViewById(R.id.left_pane);
+            leftPane.addView(fleetContentView);
+        } else {
+            // Legacy path: single pane (preserves existing behavior)
+            FrameLayout singlePane = findViewById(R.id.single_pane_container);
+            singlePane.setVisibility(View.VISIBLE);
+            singlePane.addView(fleetContentView);
+        }
 
         // Make visible (overlay layout starts as GONE)
         fleetContentView.setVisibility(View.VISIBLE);

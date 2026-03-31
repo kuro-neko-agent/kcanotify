@@ -532,6 +532,9 @@ public final class KcaConstants {
     // Panel was open before battle/quest closed it — signals need to reopen
     public static final String PREF_PANEL_PENDING_REOPEN = "panel_pending_reopen";
 
+    // --- Phase 8D: 内部左右分屏 ---
+    public static final String PREF_SPLIT_PANE_ENABLED = "split_pane_enabled";
+
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";

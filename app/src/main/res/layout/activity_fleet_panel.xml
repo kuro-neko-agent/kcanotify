@@ -5,7 +5,34 @@
     android:layout_height="match_parent"
     android:background="@drawable/overlay_background">
 
-    <!-- The fleet list layout will be inflated programmatically
-         using view_fleet_list.xml and extracting fleetviewpanel -->
+    <!-- 启用左右分屏时使用 SlidingPaneLayout -->
+    <androidx.slidingpanelayout.widget.SlidingPaneLayout
+        android:id="@+id/sliding_pane_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <!-- 左面板: 资源+舰队+任务概览 -->
+        <FrameLayout
+            android:id="@+id/left_pane"
+            android:layout_width="280dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start" />
+
+        <!-- 右面板: ViewPager2+TabLayout -->
+        <FrameLayout
+            android:id="@+id/right_pane"
+            android:layout_width="300dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+    </androidx.slidingpanelayout.widget.SlidingPaneLayout>
+
+    <!-- 禁用左右分屏时的传统单面板容器 -->
+    <FrameLayout
+        android:id="@+id/single_pane_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </FrameLayout>
