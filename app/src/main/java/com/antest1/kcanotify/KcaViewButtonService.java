@@ -64,7 +64,10 @@ import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_REV;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_SIZE;
 import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
 import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_BATTLE_FRAGMENT;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_QUEST_FRAGMENT;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_BATTLEVIEW_USE;
+import static com.antest1.kcanotify.KcaConstants.PREF_SPLIT_PANE_ENABLED;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_NOTI_QUEST_FAIRY_GLOW;
 import static com.antest1.kcanotify.KcaUtils.doVibrate;
 import static com.antest1.kcanotify.KcaUtils.getBooleanPreferences;
@@ -359,8 +362,12 @@ public class KcaViewButtonService extends BaseService {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
-                // Also close FleetPanelActivity if in split-screen mode
-                if (isSplitScreenMode()) {
+                if (isSplitScreenMode() && isSplitPaneEnabled()) {
+                    // Split-pane mode: route to BattleFragment instead of closing panel
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(BROADCAST_SHOW_BATTLE_FRAGMENT));
+                } else if (isSplitScreenMode()) {
+                    // Split-screen but no split pane: close panel as before
                     LocalBroadcastManager.getInstance(getBaseContext())
                             .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
                 }
@@ -599,6 +606,10 @@ public class KcaViewButtonService extends BaseService {
     private boolean isSplitScreenMode() {
         return DISPLAY_MODE_SPLIT.equals(
                 getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE));
+    }
+
+    private boolean isSplitPaneEnabled() {
+        return getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
     }
 
     /**
