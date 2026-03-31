@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.ScrollView;
@@ -111,8 +112,35 @@ public class FleetPanelActivity extends BaseActivity {
         // Use match_parent (per Q5: skip resizeFullWidthView)
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+                ViewGroup.LayoutParams.MATCH_PARENT);
         fleetContentView.setLayoutParams(lp);
+
+        // Fix child layout params for Activity mode.
+        // The XML uses match_parent + weight patterns that work when parent is wrap_content (overlay),
+        // but break when parent is match_parent (Activity). Use standard 0dp+weight pattern.
+        if (fleetContentView instanceof LinearLayout) {
+            LinearLayout panel = (LinearLayout) fleetContentView;
+            int childCount = panel.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                View child = panel.getChildAt(i);
+                ViewGroup.LayoutParams lp2 = child.getLayoutParams();
+                if (lp2 instanceof LinearLayout.LayoutParams) {
+                    LinearLayout.LayoutParams llp = (LinearLayout.LayoutParams) lp2;
+                    if (i == childCount - 1) {
+                        // Last child (ship area + menu buttons): fill remaining space
+                        llp.height = 0;
+                        llp.weight = 1.0f;
+                    } else {
+                        // All other children: natural height, no weight
+                        if (llp.height == ViewGroup.LayoutParams.MATCH_PARENT) {
+                            llp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                        }
+                        llp.weight = 0;
+                    }
+                    child.setLayoutParams(llp);
+                }
+            }
+        }
 
         // Add to the activity's root
         FrameLayout root = findViewById(R.id.fleet_panel_root);
