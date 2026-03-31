@@ -25,6 +25,10 @@ import android.widget.TextView;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.slidingpanelayout.widget.SlidingPaneLayout;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -95,6 +99,8 @@ public class FleetPanelActivity extends BaseActivity {
     private int switch_status = 1;
 
     private View leftPaneView; // Left pane root (only in split pane mode)
+    private RightPanePagerAdapter pagerAdapter;
+    private ViewPager2 viewPager;
 
     private BroadcastReceiver refreshReceiver;
     private BroadcastReceiver closeReceiver;
@@ -181,6 +187,8 @@ public class FleetPanelActivity extends BaseActivity {
             slidingPane.setVisibility(View.VISIBLE);
             FrameLayout leftPaneContainer = findViewById(R.id.left_pane);
             setupLeftPane(leftPaneContainer, contextWithTheme);
+            FrameLayout rightPaneContainer = findViewById(R.id.right_pane);
+            setupRightPane(rightPaneContainer, contextWithTheme);
         } else {
             // Legacy path: single pane (preserves existing behavior)
             FrameLayout singlePane = findViewById(R.id.single_pane_container);
@@ -521,6 +529,32 @@ public class FleetPanelActivity extends BaseActivity {
         // Quest tracking section
         setupCollapsibleSection(leftPaneView, R.id.section_quest_track_header,
                 R.id.section_quest_track_content, R.id.section_quest_track_arrow);
+    }
+
+    /** Initialize the right pane: ViewPager2 + TabLayout with 4 tabs */
+    private void setupRightPane(FrameLayout rightPaneContainer, Context ctx) {
+        View rightPane = LayoutInflater.from(ctx)
+                .inflate(R.layout.panel_right_pane, rightPaneContainer, true);
+
+        viewPager = rightPane.findViewById(R.id.right_pane_viewpager);
+        TabLayout tabLayout = rightPane.findViewById(R.id.right_pane_tabs);
+
+        pagerAdapter = new RightPanePagerAdapter(this);
+        viewPager.setAdapter(pagerAdapter);
+
+        String[] tabTitles = {"Battle", "Quest", "Equip", "Menu"};
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            if (position < tabTitles.length) {
+                tab.setText(tabTitles[position]);
+            }
+        }).attach();
+    }
+
+    /** Switch to a specific tab in the right pane ViewPager */
+    public void switchToTab(int tabIndex) {
+        if (viewPager != null) {
+            viewPager.setCurrentItem(tabIndex, true);
+        }
     }
 
     /** Generic collapsible section toggle */
