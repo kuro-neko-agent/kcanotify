@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.ScrollView;
@@ -35,9 +36,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_DECKPORT;
+import static com.antest1.kcanotify.KcaConstants.DB_KEY_MATERIALS;
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_STARTDATA;
 import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
 import static com.antest1.kcanotify.KcaConstants.KCANOTIFY_DB_VERSION;
+import static com.antest1.kcanotify.KcaConstants.KCANOTIFY_QTDB_VERSION;
 import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
 import static com.antest1.kcanotify.KcaConstants.PREF_FV_MENU_ORDER;
 import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_FLEET_INDEX;
@@ -90,6 +93,8 @@ public class FleetPanelActivity extends BaseActivity {
     private int selectedFleetIndex = 0;
     private int seekcn_internal = -1;
     private int switch_status = 1;
+
+    private View leftPaneView; // Left pane root (only in split pane mode)
 
     private BroadcastReceiver refreshReceiver;
     private BroadcastReceiver closeReceiver;
@@ -174,8 +179,8 @@ public class FleetPanelActivity extends BaseActivity {
             // New path: SlidingPaneLayout
             SlidingPaneLayout slidingPane = findViewById(R.id.sliding_pane_layout);
             slidingPane.setVisibility(View.VISIBLE);
-            FrameLayout leftPane = findViewById(R.id.left_pane);
-            leftPane.addView(fleetContentView);
+            FrameLayout leftPaneContainer = findViewById(R.id.left_pane);
+            setupLeftPane(leftPaneContainer, contextWithTheme);
         } else {
             // Legacy path: single pane (preserves existing behavior)
             FrameLayout singlePane = findViewById(R.id.single_pane_container);
@@ -498,6 +503,103 @@ public class FleetPanelActivity extends BaseActivity {
         startService(popupIntent);
     }
 
+    /** Initialize the left pane: inflate layout, setup collapsible sections, inject fleetContentView */
+    private void setupLeftPane(FrameLayout leftPaneContainer, Context ctx) {
+        leftPaneView = LayoutInflater.from(ctx)
+                .inflate(R.layout.panel_left_pane, leftPaneContainer, true);
+
+        // Resource section
+        setupCollapsibleSection(leftPaneView, R.id.section_resource_header,
+                R.id.section_resource_content, R.id.section_resource_arrow);
+
+        // Fleet section — inject fleetContentView
+        setupCollapsibleSection(leftPaneView, R.id.section_fleet_header,
+                R.id.section_fleet_content, R.id.section_fleet_arrow);
+        FrameLayout fleetContainer = leftPaneView.findViewById(R.id.section_fleet_content);
+        fleetContainer.addView(fleetContentView);
+
+        // Quest tracking section
+        setupCollapsibleSection(leftPaneView, R.id.section_quest_track_header,
+                R.id.section_quest_track_content, R.id.section_quest_track_arrow);
+    }
+
+    /** Generic collapsible section toggle */
+    private void setupCollapsibleSection(View parent, int headerId, int contentId, int arrowId) {
+        View header = parent.findViewById(headerId);
+        View content = parent.findViewById(contentId);
+        ImageView arrow = (ImageView) parent.findViewById(arrowId);
+
+        header.setOnClickListener(v -> {
+            boolean isVisible = content.getVisibility() == View.VISIBLE;
+            content.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+            arrow.setImageResource(isVisible
+                    ? R.drawable.ic_arrow_down
+                    : R.drawable.ic_arrow_up);
+        });
+    }
+
+    /** Bind resource data (fuel/ammo/steel/bauxite + instant items) to left pane */
+    private void bindResourceData() {
+        if (leftPaneView == null) return;
+        JsonArray material = dbHelper.getJsonArrayValue(DB_KEY_MATERIALS);
+        if (material == null) return;
+
+        // material format: array of objects with api_id (1-8) and api_value
+        // Or it may be a flat array [fuel, ammo, steel, bauxite, instant_build, instant_repair, dev_mat, screw]
+        int[] resIds = {
+            R.id.res_fuel, R.id.res_ammo, R.id.res_steel, R.id.res_bauxite,
+            R.id.res_instant_build, R.id.res_instant_repair, R.id.res_dev_material, R.id.res_screw
+        };
+        String[] labels = {"Fuel ", "Ammo ", "Steel ", "Baux ", "Build ", "Repair ", "Dev ", "Screw "};
+
+        for (int i = 0; i < Math.min(material.size(), resIds.length); i++) {
+            TextView tv = leftPaneView.findViewById(resIds[i]);
+            if (tv != null) {
+                int value;
+                if (material.get(i).isJsonObject()) {
+                    value = material.get(i).getAsJsonObject().get("api_value").getAsInt();
+                } else {
+                    value = material.get(i).getAsInt();
+                }
+                tv.setText(labels[i] + value);
+            }
+        }
+    }
+
+    /** Bind quest tracking data to left pane */
+    private void bindQuestTrackData() {
+        if (leftPaneView == null) return;
+        LinearLayout container = leftPaneView.findViewById(R.id.section_quest_track_content);
+        if (container == null) return;
+        container.removeAllViews();
+
+        JsonArray questList = dbHelper.getCurrentQuestList();
+        if (questList == null || questList.size() == 0) {
+            TextView emptyText = new TextView(this);
+            emptyText.setText("No tracked quests");
+            emptyText.setTextColor(getResources().getColor(R.color.white));
+            emptyText.setTextSize(11);
+            emptyText.setPadding(4, 4, 4, 4);
+            container.addView(emptyText);
+            return;
+        }
+
+        for (int i = 0; i < questList.size(); i++) {
+            JsonObject quest = questList.get(i).getAsJsonObject();
+            if (quest.has("api_no") && quest.has("api_title")) {
+                TextView tv = new TextView(this);
+                String title = quest.get("api_title").getAsString();
+                tv.setText(title);
+                tv.setTextColor(getResources().getColor(R.color.white));
+                tv.setTextSize(11);
+                tv.setSingleLine(true);
+                tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                tv.setPadding(4, 2, 4, 2);
+                container.addView(tv);
+            }
+        }
+    }
+
     private void refreshFleetData() {
         // Restore isReady flag after process death if DB has deckport data
         if (!KcaFleetViewService.isReady) {
@@ -511,6 +613,10 @@ public class FleetPanelActivity extends BaseActivity {
         fleetDataManager.setSwitchStatus(switch_status);
         fleetDataManager.setSeekCnInternal(seekcn_internal);
         fleetDataManager.bindFleetData(fleetContentView);
+
+        // Refresh left pane data (split pane mode only)
+        bindResourceData();
+        bindQuestTrackData();
     }
 
     private void startTimer() {
