@@ -39,6 +39,12 @@ import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
 import static com.antest1.kcanotify.KcaConstants.KCANOTIFY_DB_VERSION;
 import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
 import static com.antest1.kcanotify.KcaConstants.PREF_FV_MENU_ORDER;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_FLEET_INDEX;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SEEK_CN;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_LAST_SWITCH_STATUS;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
+
+import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
 import static com.antest1.kcanotify.KcaFleetViewService.DECKINFO_REQ_LIST;
 import static com.antest1.kcanotify.KcaFleetViewService.KC_DECKINFO_REQ_LIST;
@@ -59,6 +65,9 @@ public class FleetPanelActivity extends BaseActivity {
     private static final String TAG = "FleetPanelActivity";
 
     public static final String CLOSE_FLEET_PANEL_ACTION = "com.antest1.kcanotify.CLOSE_FLEET_PANEL";
+
+    // Static flag for KcaViewButtonService to check if panel is already open
+    public static volatile boolean isFleetPanelOpen = false;
 
     private static final String STATE_FLEET_INDEX = "selectedFleetIndex";
     private static final String STATE_SEEK_CN = "seekcn_internal";
@@ -81,6 +90,7 @@ public class FleetPanelActivity extends BaseActivity {
 
     private BroadcastReceiver refreshReceiver;
     private BroadcastReceiver closeReceiver;
+    private boolean closedByBroadcast = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -495,6 +505,30 @@ public class FleetPanelActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Save current panel state to SharedPreferences.
+     * Called before finish() when panel is closed by broadcast (battle/quest activation).
+     */
+    private void savePanelStateToPrefs() {
+        SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+        prefs.edit()
+            .putInt(PREF_PANEL_LAST_FLEET_INDEX, selectedFleetIndex)
+            .putInt(PREF_PANEL_LAST_SEEK_CN, seekcn_internal)
+            .putInt(PREF_PANEL_LAST_SWITCH_STATUS, switch_status)
+            .apply();
+    }
+
+    /**
+     * Restore panel state from SharedPreferences.
+     * Used on fresh start (not config change rebuild) to restore state after battle/quest reopen.
+     */
+    private void restorePanelStateFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+        selectedFleetIndex = prefs.getInt(PREF_PANEL_LAST_FLEET_INDEX, 0);
+        seekcn_internal = prefs.getInt(PREF_PANEL_LAST_SEEK_CN, -1);
+        switch_status = prefs.getInt(PREF_PANEL_LAST_SWITCH_STATUS, 1);
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -506,6 +540,7 @@ public class FleetPanelActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        isFleetPanelOpen = true;
 
         // If user switched back to Overlay mode in settings, close this Activity
         if (!DISPLAY_MODE_SPLIT.equals(
@@ -546,11 +581,24 @@ public class FleetPanelActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
+        isFleetPanelOpen = false;
         stopTimer();
         if (itemPopupWindow != null) {
             itemPopupWindow.dismiss();
             itemPopupWindow = null;
         }
+
+        // closedByBroadcast flag safety depends on AndroidManifest.xml declaring
+        // configChanges="smallestScreenSize|screenLayout|screenSize" for FleetPanelActivity.
+        // This ensures fold/unfold and rotation do not trigger onDestroy.
+        // If configChanges is modified in the future, this flag's safety must be re-evaluated.
+
+        // User manually closed (head click / back button) → clear reopen flag
+        if (!closedByBroadcast) {
+            SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+            prefs.edit().putBoolean(PREF_PANEL_PENDING_REOPEN, false).apply();
+        }
+
         super.onDestroy();
     }
 

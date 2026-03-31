@@ -521,6 +521,17 @@ public final class KcaConstants {
     public static final String DISPLAY_MODE_OVERLAY = "0";
     public static final String DISPLAY_MODE_SPLIT = "1";
 
+    // --- Phase 8B: Panel automation ---
+    public static final String PREF_PANEL_AUTO_LAUNCH = "panel_auto_launch";
+
+    // SharedPreferences keys for panel state persistence (across Activity destroy/recreate)
+    public static final String PREF_PANEL_LAST_FLEET_INDEX = "panel_last_fleet_index";
+    public static final String PREF_PANEL_LAST_SEEK_CN = "panel_last_seek_cn";
+    public static final String PREF_PANEL_LAST_SWITCH_STATUS = "panel_last_switch_status";
+
+    // Panel was open before battle/quest closed it — signals need to reopen
+    public static final String PREF_PANEL_PENDING_REOPEN = "panel_pending_reopen";
+
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";
