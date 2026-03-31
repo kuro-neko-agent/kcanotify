@@ -369,6 +369,7 @@ public class KcaViewButtonService extends BaseService {
             if (intent.getAction().equals(DEACTIVATE_BATTLEVIEW_ACTION)) {
                 taiha_status = false;
                 battleviewEnabled = false;
+                reopenFleetPanelIfNeeded();
             }
             if (intent.getAction().equals(ACTIVATE_QUESTVIEW_ACTION)) {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
@@ -383,6 +384,7 @@ public class KcaViewButtonService extends BaseService {
             }
             if (intent.getAction().equals(DEACTIVATE_QUESTVIEW_ACTION)) {
                 questviewEnabled = false;
+                reopenFleetPanelIfNeeded();
             }
 
         }
@@ -610,6 +612,35 @@ public class KcaViewButtonService extends BaseService {
             intent.putExtras(extras);
         }
         startActivity(intent);
+    }
+
+    /**
+     * Reopen FleetPanelActivity after battle or quest screen ends,
+     * if panel was previously force-closed.
+     * Also reopens unconditionally when auto-launch mode is enabled.
+     */
+    private void reopenFleetPanelIfNeeded() {
+        if (!isSplitScreenMode()) return;
+
+        SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+        boolean pendingReopen = prefs.getBoolean(PREF_PANEL_PENDING_REOPEN, false);
+        boolean autoLaunch = prefs.getBoolean(PREF_PANEL_AUTO_LAUNCH, false);
+
+        if (pendingReopen || autoLaunch) {
+            // Clear pending flag
+            prefs.edit().putBoolean(PREF_PANEL_PENDING_REOPEN, false).apply();
+
+            mHandler.postDelayed(() -> {
+                // Re-check: state may have changed during delay (e.g., user quickly re-sortied)
+                if (isSplitScreenMode() && !battleviewEnabled && !questviewEnabled) {
+                    launchFleetPanelActivity(null);
+                }
+            }, PANEL_REOPEN_DELAY_MS);
+        }
+    }
+
+    private boolean isAutoLaunchEnabled() {
+        return getBooleanPreferences(getApplicationContext(), PREF_PANEL_AUTO_LAUNCH);
     }
 
     private final View.OnClickListener clickListener = new View.OnClickListener() {

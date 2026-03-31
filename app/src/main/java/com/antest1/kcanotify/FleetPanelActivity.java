@@ -176,6 +176,10 @@ public class FleetPanelActivity extends BaseActivity {
             selectedFleetIndex = savedInstanceState.getInt(STATE_FLEET_INDEX, 0);
             seekcn_internal = savedInstanceState.getInt(STATE_SEEK_CN, -1);
             switch_status = savedInstanceState.getInt(STATE_SWITCH, 1);
+        } else {
+            // Not a config change rebuild — try restoring from SharedPreferences
+            // (battle/quest end reopen scenario)
+            restorePanelStateFromPrefs();
         }
 
         if (seekcn_internal == -1) {
@@ -220,6 +224,14 @@ public class FleetPanelActivity extends BaseActivity {
         closeReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                // Save current state for restoration after battle/quest ends
+                savePanelStateToPrefs();
+
+                // Mark: panel was force-closed by battle/quest, needs reopen when done
+                SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+                prefs.edit().putBoolean(PREF_PANEL_PENDING_REOPEN, true).apply();
+
+                closedByBroadcast = true;
                 finish();
             }
         };
