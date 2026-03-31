@@ -348,6 +348,9 @@ public class FleetPanelActivity extends BaseActivity {
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
             case MotionEvent.ACTION_DOWN:
+                JsonArray deckportCheck = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
+                if (deckportCheck == null) break;
+
                 for (int i = 0; i < 12; i++) {
                     if (isInsideView(fleetDataManager.getFleetViewItem(fleetContentView, i), x, y)) {
                         if (itemPopupSelected != i) {

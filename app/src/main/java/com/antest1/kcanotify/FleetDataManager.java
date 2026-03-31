@@ -139,6 +139,13 @@ public class FleetDataManager {
      */
     public boolean bindFleetData(View rootView) {
         try {
+            // Check if fleet data is available before binding
+            JsonArray deckportdata = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
+            if (!KcaFleetViewService.isReady || deckportdata == null || deckportdata.size() == 0) {
+                showEmptyState(rootView);
+                return false;
+            }
+
             bindHqInfo(rootView);
             View titleView = rootView.findViewById(R.id.fleetview_title);
             if (titleView != null) titleView.setVisibility(VISIBLE);
@@ -149,6 +156,15 @@ public class FleetDataManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private void showEmptyState(View rootView) {
+        TextView fleetInfoLine = rootView.findViewById(R.id.fleetview_infoline);
+        fleetInfoLine.setBackgroundColor(ContextCompat.getColor(context, R.color.colorFleetInfoNoShip));
+        fleetInfoLine.setText(context.getString(R.string.kca_init_content));
+        rootView.findViewById(R.id.fleet_list_main).setVisibility(INVISIBLE);
+        rootView.findViewById(R.id.fleet_list_combined).setVisibility(GONE);
+        rootView.findViewById(R.id.fleetview_fleetswitch).setVisibility(GONE);
     }
 
     public void advanceHqInfoState() {
@@ -194,6 +210,12 @@ public class FleetDataManager {
                 TextView equipcntview = hqInfoView.findViewById(R.id.fleetview_cnt2);
                 ImageView shipcntviewicon = hqInfoView.findViewById(R.id.fleetview_cnt1_icon);
                 ImageView equipcntviewicon = hqInfoView.findViewById(R.id.fleetview_cnt2_icon);
+
+                if (!KcaApiData.isGameDataLoaded()) {
+                    shipcntview.setText("--/--");
+                    equipcntview.setText("--/--");
+                    break;
+                }
 
                 shipcntview.setText(format("%d/%d", KcaApiData.getShipSize(), KcaApiData.getUserMaxShipCount()));
                 if (KcaApiData.checkEventUserShip()) {
