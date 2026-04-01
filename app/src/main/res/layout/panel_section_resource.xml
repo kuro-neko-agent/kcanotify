@@ -4,6 +4,7 @@
     android:id="@+id/section_resource"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical">
 
     <!-- Clickable header -->
@@ -33,99 +34,217 @@
             app:srcCompat="@drawable/ic_arrow_up" />
     </LinearLayout>
 
-    <!-- Collapsible content: 2 rows x 4 columns -->
+    <!-- Collapsible content: 2 columns x 4 rows with icons -->
     <GridLayout
         android:id="@+id/section_resource_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="4"
+        android:columnCount="2"
         android:padding="4dp"
         android:useDefaultMargins="true">
 
-        <!-- Row 1: Fuel, Ammo, Steel, Bauxite -->
-        <TextView
-            android:id="@+id/res_fuel"
+        <!-- Row 1: Fuel, Ammo -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:drawablePadding="2dp"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_fuel" />
+            <TextView
+                android:id="@+id/res_fuel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_ammo"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:drawablePadding="2dp"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_ammo" />
+            <TextView
+                android:id="@+id/res_ammo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_steel"
+        <!-- Row 2: Steel, Bauxite -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:drawablePadding="2dp"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_steel" />
+            <TextView
+                android:id="@+id/res_steel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_bauxite"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:drawablePadding="2dp"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_bauxite" />
+            <TextView
+                android:id="@+id/res_bauxite"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <!-- Row 2: Instant Build, Instant Repair, DevMat, ScrewMat -->
-        <TextView
-            android:id="@+id/res_instant_build"
+        <!-- Row 3: Instant Repair, Instant Build -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_instant_repair" />
+            <TextView
+                android:id="@+id/res_instant_repair"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_instant_repair"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_instant_build" />
+            <TextView
+                android:id="@+id/res_instant_build"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_dev_material"
+        <!-- Row 4: Dev Material, Screw -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_dev_material" />
+            <TextView
+                android:id="@+id/res_dev_material"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/res_screw"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="0"
-            android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_material_screw" />
+            <TextView
+                android:id="@+id/res_screw"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+        </LinearLayout>
     </GridLayout>
 </LinearLayout>

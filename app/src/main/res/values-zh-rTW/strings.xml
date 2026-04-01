@@ -895,4 +895,16 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="panel_equip_coming_soon">即將推出</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">元帥</string>
+    <string name="hq_rank_2">大將</string>
+    <string name="hq_rank_3">中將</string>
+    <string name="hq_rank_4">少將</string>
+    <string name="hq_rank_5">大佐</string>
+    <string name="hq_rank_6">中佐</string>
+    <string name="hq_rank_7">少佐</string>
+    <string name="hq_rank_8">中佐</string>
+    <string name="hq_rank_9">大尉</string>
+    <string name="hq_rank_10">少尉</string>
 </resources>

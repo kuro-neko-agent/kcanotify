@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.antest1.kcanotify.KcaConstants.DB_KEY_BASICIFNO;
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_DECKPORT;
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_MATERIALS;
 import static com.antest1.kcanotify.KcaConstants.DB_KEY_STARTDATA;
@@ -108,6 +109,7 @@ public class FleetPanelActivity extends BaseActivity {
     private View leftPaneView; // Left pane root (only in split pane mode)
     private RightPanePagerAdapter pagerAdapter;
     private ViewPager2 viewPager;
+    private int hqLevel = 1; // cached HQ level for resource regen cap calculation
 
     private BroadcastReceiver refreshReceiver;
     private BroadcastReceiver closeReceiver;
@@ -725,24 +727,86 @@ public class FleetPanelActivity extends BaseActivity {
         });
     }
 
-    /** Bind resource data (fuel/ammo/steel/bauxite + instant items) to left pane */
+    /** Rank names indexed by api_rank_no (1-10) */
+    private static final int[] RANK_STRING_IDS = {
+        0, // index 0 unused
+        R.string.hq_rank_1, R.string.hq_rank_2, R.string.hq_rank_3,
+        R.string.hq_rank_4, R.string.hq_rank_5, R.string.hq_rank_6,
+        R.string.hq_rank_7, R.string.hq_rank_8, R.string.hq_rank_9,
+        R.string.hq_rank_10
+    };
+
+    /** Bind HQ info (admiral level, name, rank, ship/equip counts) to left pane */
+    private void bindHQInfoData() {
+        if (leftPaneView == null) return;
+        JsonObject basicInfo = dbHelper.getJsonObjectValue(DB_KEY_BASICIFNO);
+        if (basicInfo == null) return;
+
+        // Line 1: Lv.XXX Nickname [Rank]
+        TextView line1 = leftPaneView.findViewById(R.id.hq_info_line1);
+        if (line1 != null) {
+            int level = basicInfo.has("api_level") ? basicInfo.get("api_level").getAsInt() : 0;
+            hqLevel = level;
+            String nickname = basicInfo.has("api_nickname") ? basicInfo.get("api_nickname").getAsString() : "";
+            int rankNo = basicInfo.has("api_rank_no") ? basicInfo.get("api_rank_no").getAsInt() : 0;
+            String rankName = "";
+            if (rankNo >= 1 && rankNo <= 10) {
+                rankName = getString(RANK_STRING_IDS[rankNo]);
+            }
+            line1.setText(String.format("Lv.%d %s [%s]", level, nickname, rankName));
+        }
+
+        // Line 2: Ship count/max  Equip count/max
+        int maxShip = basicInfo.has("api_max_chara") ? basicInfo.get("api_max_chara").getAsInt() : 0;
+        int maxEquip = basicInfo.has("api_max_slotitem") ? basicInfo.get("api_max_slotitem").getAsInt() : 0;
+        int shipCount = dbHelper.getShipCount();
+        int equipCount = dbHelper.getItemCount();
+
+        TextView shipTv = leftPaneView.findViewById(R.id.hq_info_ship_count);
+        if (shipTv != null) {
+            shipTv.setText(String.format("\u2693 %d/%d", shipCount, maxShip));
+            if (maxShip > 0) {
+                float ratio = (float) shipCount / maxShip;
+                if (ratio > 0.95f) {
+                    shipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+                } else if (ratio > 0.90f) {
+                    shipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+                } else {
+                    shipTv.setTextColor(getResources().getColor(R.color.white));
+                }
+            }
+        }
+
+        TextView equipTv = leftPaneView.findViewById(R.id.hq_info_equip_count);
+        if (equipTv != null) {
+            equipTv.setText(String.format("\u2694 %d/%d", equipCount, maxEquip));
+            if (maxEquip > 0) {
+                float ratio = (float) equipCount / maxEquip;
+                if (ratio > 0.95f) {
+                    equipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+                } else if (ratio > 0.90f) {
+                    equipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+                } else {
+                    equipTv.setTextColor(getResources().getColor(R.color.white));
+                }
+            }
+        }
+    }
+
+    /** Bind resource data (fuel/ammo/steel/bauxite + instant items) to left pane with icons */
     private void bindResourceData() {
         if (leftPaneView == null) return;
         JsonArray material = dbHelper.getJsonArrayValue(DB_KEY_MATERIALS);
         if (material == null) return;
 
-        // material format: array of objects with api_id (1-8) and api_value
-        // Or it may be a flat array [fuel, ammo, steel, bauxite, instant_build, instant_repair, dev_mat, screw]
+        // Resource IDs now point to TextViews inside icon+number grid cells
         int[] resIds = {
             R.id.res_fuel, R.id.res_ammo, R.id.res_steel, R.id.res_bauxite,
             R.id.res_instant_build, R.id.res_instant_repair, R.id.res_dev_material, R.id.res_screw
         };
-        String[] labels = {
-            getString(R.string.panel_res_fuel), getString(R.string.panel_res_ammo),
-            getString(R.string.panel_res_steel), getString(R.string.panel_res_baux),
-            getString(R.string.panel_res_build), getString(R.string.panel_res_repair),
-            getString(R.string.panel_res_dev), getString(R.string.panel_res_screw)
-        };
+
+        // Natural regen cap applies to first 4 resources only
+        int regenCap = 750 + hqLevel * 250;
 
         for (int i = 0; i < Math.min(material.size(), resIds.length); i++) {
             TextView tv = leftPaneView.findViewById(resIds[i]);
@@ -753,7 +817,14 @@ public class FleetPanelActivity extends BaseActivity {
                 } else {
                     value = material.get(i).getAsInt();
                 }
-                tv.setText(labels[i] + value);
+                tv.setText(String.valueOf(value));
+
+                // Green tint for main resources still regenerating (below cap)
+                if (i < 4 && value < regenCap) {
+                    tv.setTextColor(getResources().getColor(R.color.colorRegenActive));
+                } else {
+                    tv.setTextColor(getResources().getColor(R.color.white));
+                }
             }
         }
     }
@@ -807,6 +878,7 @@ public class FleetPanelActivity extends BaseActivity {
         fleetDataManager.bindFleetData(fleetContentView);
 
         // Refresh left pane data (split pane mode only)
+        bindHQInfoData();
         bindResourceData();
         bindQuestTrackData();
     }
