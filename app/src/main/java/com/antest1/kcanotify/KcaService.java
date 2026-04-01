@@ -920,13 +920,11 @@ public class KcaService extends BaseService {
                         // Route to QuestFragment via broadcast
                         LocalBroadcastManager.getInstance(getBaseContext())
                                 .sendBroadcast(new Intent(KCA_MSG_QUEST_VIEW_LIST));
+                        sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_QUEST);
                     } else if (Settings.canDrawOverlays(getApplicationContext())) {
                         startService(new Intent(getBaseContext(), KcaQuestViewService.class)
                                 .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
                     }
-                }
-                if (isSplitPaneMode()) {
-                    sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_QUEST);
                 }
                 sendQuestCompletionInfo();
                 return;

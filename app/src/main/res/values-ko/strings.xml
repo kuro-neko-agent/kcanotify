@@ -859,6 +859,8 @@
     <string name="settings_auto_tab_switch_summary">게임 API에 따라 탭 자동 전환</string>
     <string name="settings_auto_tab_battle">출격 시 전투 탭으로 전환</string>
     <string name="settings_auto_tab_quest">임무 목록 시 임무 탭으로 전환</string>
+    <string name="settings_resizable_pane">패널 크기 드래그 조절</string>
+    <string name="settings_resizable_pane_summary">분할선을 드래그하여 좌우 패널 크기 조절</string>
 
     <!-- Phase 8D: Tab titles -->
     <string name="panel_tab_battle">전투</string>

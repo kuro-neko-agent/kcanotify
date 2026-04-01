@@ -112,8 +112,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         sharedPref = context.getSharedPreferences("pref", Context.MODE_PRIVATE);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
 
-        Activity activity = getActivity();
-        if (activity instanceof Callback) mCallback = (Callback) activity;
+        // Check parent fragment first (for embedded use in SettingsFragment),
+        // then fall back to activity (for standalone SettingActivity)
+        if (getParentFragment() instanceof Callback) {
+            mCallback = (Callback) getParentFragment();
+        } else {
+            Activity activity = getActivity();
+            if (activity instanceof Callback) mCallback = (Callback) activity;
+        }
 
         createNotificationChannel(context);
 
@@ -163,8 +169,13 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         super.onViewCreated(view, savedInstanceState);
         isActivitySet = true;
 
-        ((AppCompatActivity) getActivity()).getSupportActionBar()
-                .setTitle(getString(R.string.action_settings));
+        if (getActivity() instanceof AppCompatActivity) {
+            androidx.appcompat.app.ActionBar actionBar =
+                    ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(getString(R.string.action_settings));
+            }
+        }
 
         Map<String, ?> allEntries = sharedPref.getAll();
 

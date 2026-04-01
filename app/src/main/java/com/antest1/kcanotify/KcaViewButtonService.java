@@ -495,7 +495,7 @@ public class KcaViewButtonService extends BaseService {
 
     @Override
     public void onDestroy() {
-        mHandler.removeCallbacksAndMessages(null);
+        if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battleinfo_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlenode_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlehdmg_receiver);

@@ -859,6 +859,8 @@
     <string name="settings_auto_tab_switch_summary">ゲームAPIに基づいてタブを自動切替</string>
     <string name="settings_auto_tab_battle">出撃時に戦闘タブに切替</string>
     <string name="settings_auto_tab_quest">任務一覧時に任務タブに切替</string>
+    <string name="settings_resizable_pane">パネル幅のドラッグ調整</string>
+    <string name="settings_resizable_pane_summary">分割線をドラッグして左右パネルの幅を調整</string>
 
     <!-- Phase 8D: Tab titles -->
     <string name="panel_tab_battle">戦闘</string>

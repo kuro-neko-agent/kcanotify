@@ -864,6 +864,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="settings_auto_tab_switch_summary">根據遊戲API自動切換標籤</string>
     <string name="settings_auto_tab_battle">出擊時切換到戰鬥標籤</string>
     <string name="settings_auto_tab_quest">查看任務列表時切換到任務標籤</string>
+    <string name="settings_resizable_pane">可拖曳面板分割線</string>
+    <string name="settings_resizable_pane_summary">拖動分割線調整左右面板寬度</string>
 
     <!-- Phase 8D: Tab titles -->
     <string name="panel_tab_battle">戰鬥</string>

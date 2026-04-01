@@ -97,6 +97,14 @@ public class QuestFragment extends Fragment implements QuestDataManager.QuestPop
         }
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        questViewInitialized = false;
+        if (dbHelper != null) { dbHelper.close(); dbHelper = null; }
+        if (questTracker != null) { questTracker.close(); questTracker = null; }
+    }
+
     private void initQuestView() {
         if (questViewInitialized || contentContainer == null) return;
 
@@ -115,8 +123,15 @@ public class QuestFragment extends Fragment implements QuestDataManager.QuestPop
             questContentView.setLayoutParams(lp);
             contentContainer.addView(questContentView);
 
-            questDescPopupView = questContentView.findViewById(R.id.quest_desc_popup);
-            questDescPopupView.setVisibility(View.GONE);
+            questDescPopupView = inflated.findViewById(R.id.quest_desc_popup);
+            if (questDescPopupView != null) {
+                // Re-parent popup into contentContainer so it overlays the quest list
+                if (questDescPopupView.getParent() != null) {
+                    ((ViewGroup) questDescPopupView.getParent()).removeView(questDescPopupView);
+                }
+                contentContainer.addView(questDescPopupView);
+                questDescPopupView.setVisibility(View.GONE);
+            }
             questListView = questContentView.findViewById(R.id.quest_list);
 
             KcaQuestListAdpater adapter = questDataManager.getOrCreateAdapter(this);
@@ -251,10 +266,11 @@ public class QuestFragment extends Fragment implements QuestDataManager.QuestPop
                 boolean isQuestMode = KcaQuestViewService.getQuestMode();
                 int filterState = questDataManager.getCurrentFilterState();
                 int result = questDataManager.loadAndSetView(
-                        questListView, isQuestMode, false, 0, filterState);
+                        questListView, isQuestMode, true, 0, filterState);
                 if (result == 0) {
-                    questDescPopupView.setVisibility(View.GONE);
-                    int totalSize = questDataManager.getAdapter().getCount();
+                    if (questDescPopupView != null) questDescPopupView.setVisibility(View.GONE);
+                    int totalSize = questDataManager.getAdapter() != null
+                            ? questDataManager.getAdapter().getCount() : 0;
                     questDataManager.setTopBottomNavigation(questContentView, 1, totalSize);
                 }
             } catch (Exception e) {

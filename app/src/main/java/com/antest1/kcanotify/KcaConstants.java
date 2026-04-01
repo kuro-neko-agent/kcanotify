@@ -548,6 +548,7 @@ public final class KcaConstants {
     public static final String PREF_AUTO_TAB_SWITCH = "auto_tab_switch";
     public static final String PREF_AUTO_TAB_BATTLE = "auto_tab_switch_battle";
     public static final String PREF_AUTO_TAB_QUEST = "auto_tab_switch_quest";
+    public static final String PREF_RESIZABLE_PANE = "resizable_pane";
 
     public static final String PREF_FV_ITEM_1 = "fleetview_item_select_value_1";
     public static final String PREF_FV_ITEM_2 = "fleetview_item_select_value_2";
