@@ -24,7 +24,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.slidingpanelayout.widget.SlidingPaneLayout;
+import android.util.DisplayMetrics;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
@@ -56,6 +56,9 @@ import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_BATTLE_FRAGMENT;
 import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_QUEST_FRAGMENT;
 import static com.antest1.kcanotify.KcaConstants.BROADCAST_TAB_SWITCH;
 import static com.antest1.kcanotify.KcaConstants.EXTRA_TAB_INDEX;
+import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_VIEW_LIST;
+import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_COMPLETE;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESIZABLE_PANE;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -111,8 +114,11 @@ public class FleetPanelActivity extends BaseActivity {
     private BroadcastReceiver showBattleReceiver;
     private BroadcastReceiver showQuestReceiver;
     private BroadcastReceiver tabSwitchReceiver;
+    private BroadcastReceiver questUpdateReceiver;
     private boolean closedByBroadcast = false;
     private boolean splitPaneEnabled = false;
+    private boolean lastResizablePaneState = false;
+    private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,15 +194,44 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Add fleetContentView to the appropriate container
         splitPaneEnabled = getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+        lastResizablePaneState = getBooleanPreferences(getApplicationContext(), PREF_RESIZABLE_PANE);
 
         if (splitPaneEnabled) {
-            // New path: SlidingPaneLayout
-            SlidingPaneLayout slidingPane = findViewById(R.id.sliding_pane_layout);
-            slidingPane.setVisibility(View.VISIBLE);
+            // New path: resizable split pane
+            LinearLayout splitPane = findViewById(R.id.split_pane_layout);
+            splitPane.setVisibility(View.VISIBLE);
             FrameLayout leftPaneContainer = findViewById(R.id.left_pane);
             setupLeftPane(leftPaneContainer, contextWithTheme);
             FrameLayout rightPaneContainer = findViewById(R.id.right_pane);
             setupRightPane(rightPaneContainer, contextWithTheme);
+            View divider = findViewById(R.id.pane_divider);
+            if (getBooleanPreferences(getApplicationContext(), PREF_RESIZABLE_PANE)) {
+                restoreLeftPaneWidth(leftPaneContainer);
+                setupDividerDrag(divider, leftPaneContainer);
+            } else {
+                divider.setVisibility(View.GONE);
+            }
+
+            // Listen for resizable pane toggle from embedded settings tab
+            final FrameLayout leftPaneRef = leftPaneContainer;
+            final View dividerRef = divider;
+            prefListener = (prefs, key) -> {
+                if (PREF_RESIZABLE_PANE.equals(key)) {
+                    boolean enabled = prefs.getBoolean(key, false);
+                    if (enabled) {
+                        dividerRef.setVisibility(View.VISIBLE);
+                        dividerRef.setBackgroundColor(0x40FFFFFF);
+                        restoreLeftPaneWidth(leftPaneRef);
+                        setupDividerDrag(dividerRef, leftPaneRef);
+                    } else {
+                        dividerRef.setVisibility(View.GONE);
+                        dividerRef.setOnTouchListener(null);
+                        // Keep current width — don't reset
+                    }
+                }
+            };
+            getSharedPreferences("pref", MODE_PRIVATE)
+                    .registerOnSharedPreferenceChangeListener(prefListener);
         } else {
             // Legacy path: single pane (preserves existing behavior)
             FrameLayout singlePane = findViewById(R.id.single_pane_container);
@@ -306,6 +341,12 @@ public class FleetPanelActivity extends BaseActivity {
                     }
                 }
             };
+            questUpdateReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    bindQuestTrackData();
+                }
+            };
         }
     }
 
@@ -371,8 +412,12 @@ public class FleetPanelActivity extends BaseActivity {
     }
 
     private void setupMenuButtons() {
-        // Menu button ordering (same as KcaFleetViewService.setFleetMenu)
+        // In split pane mode, hide menu buttons — right pane has Menu tab
         ViewGroup fleetMenuArea = fleetContentView.findViewById(R.id.viewbutton_area);
+        if (splitPaneEnabled && fleetMenuArea != null) {
+            fleetMenuArea.setVisibility(View.GONE);
+            return;
+        }
         List<TextView> menuBtnList = new ArrayList<>();
         for (String key : fleetview_menu_keys) {
             TextView tv = fleetContentView.findViewById(getId(
@@ -589,14 +634,73 @@ public class FleetPanelActivity extends BaseActivity {
         String[] tabTitles = {
             getString(R.string.panel_tab_battle),
             getString(R.string.panel_tab_quest),
-            getString(R.string.panel_tab_equip),
-            getString(R.string.panel_tab_menu)
+            getString(R.string.panel_tab_menu),
+            getString(R.string.action_settings)
         };
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             if (position < tabTitles.length) {
                 tab.setText(tabTitles[position]);
             }
         }).attach();
+    }
+
+    private static final String PREF_LEFT_PANE_WIDTH_PX = "left_pane_width_px";
+    private static final int MIN_LEFT_PANE_DP = 180;
+    private static final int MAX_LEFT_PANE_DP = 400;
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    /** Restore saved left pane width from SharedPreferences */
+    private void restoreLeftPaneWidth(FrameLayout leftPane) {
+        int savedWidth = getSharedPreferences("fleet_panel", MODE_PRIVATE)
+                .getInt(PREF_LEFT_PANE_WIDTH_PX, 0);
+        if (savedWidth > 0) {
+            int minPx = dpToPx(MIN_LEFT_PANE_DP);
+            int maxPx = dpToPx(MAX_LEFT_PANE_DP);
+            savedWidth = Math.max(minPx, Math.min(maxPx, savedWidth));
+            ViewGroup.LayoutParams lp = leftPane.getLayoutParams();
+            lp.width = savedWidth;
+            leftPane.setLayoutParams(lp);
+        }
+    }
+
+    /** Setup drag-to-resize on the divider view */
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupDividerDrag(View divider, FrameLayout leftPane) {
+        final int minPx = dpToPx(MIN_LEFT_PANE_DP);
+        final int maxPx = dpToPx(MAX_LEFT_PANE_DP);
+
+        divider.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    divider.setBackgroundColor(0x80FFFFFF); // highlight on touch
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    return true;
+                case android.view.MotionEvent.ACTION_MOVE:
+                    // event.getRawX() gives absolute screen X
+                    int[] loc = new int[2];
+                    leftPane.getLocationOnScreen(loc);
+                    int newWidth = (int) event.getRawX() - loc[0];
+                    newWidth = Math.max(minPx, Math.min(maxPx, newWidth));
+                    ViewGroup.LayoutParams lp = leftPane.getLayoutParams();
+                    lp.width = newWidth;
+                    leftPane.setLayoutParams(lp);
+                    return true;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    divider.setBackgroundColor(0x40FFFFFF); // restore
+                    // Save the width
+                    ViewGroup.LayoutParams finalLp = leftPane.getLayoutParams();
+                    getSharedPreferences("fleet_panel", MODE_PRIVATE)
+                            .edit()
+                            .putInt(PREF_LEFT_PANE_WIDTH_PX, finalLp.width)
+                            .apply();
+                    return true;
+            }
+            return false;
+        });
     }
 
     /** Switch to a specific tab in the right pane ViewPager */
@@ -770,6 +874,8 @@ public class FleetPanelActivity extends BaseActivity {
             return;
         }
 
+
+
         // Register broadcast receivers
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.registerReceiver(refreshReceiver, new IntentFilter(BROADCAST_REFRESH_FLEETVIEW));
@@ -782,6 +888,11 @@ public class FleetPanelActivity extends BaseActivity {
         }
         if (tabSwitchReceiver != null) {
             lbm.registerReceiver(tabSwitchReceiver, new IntentFilter(BROADCAST_TAB_SWITCH));
+        }
+        if (questUpdateReceiver != null) {
+            IntentFilter questFilter = new IntentFilter(KCA_MSG_QUEST_VIEW_LIST);
+            questFilter.addAction(KCA_MSG_QUEST_COMPLETE);
+            lbm.registerReceiver(questUpdateReceiver, questFilter);
         }
 
         // Refresh data from DB
@@ -807,6 +918,9 @@ public class FleetPanelActivity extends BaseActivity {
         }
         if (tabSwitchReceiver != null) {
             lbm.unregisterReceiver(tabSwitchReceiver);
+        }
+        if (questUpdateReceiver != null) {
+            lbm.unregisterReceiver(questUpdateReceiver);
         }
     }
 
@@ -836,6 +950,11 @@ public class FleetPanelActivity extends BaseActivity {
         if (!closedByBroadcast) {
             SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
             prefs.edit().putBoolean(PREF_PANEL_PENDING_REOPEN, false).apply();
+        }
+
+        if (prefListener != null) {
+            getSharedPreferences("pref", MODE_PRIVATE)
+                    .unregisterOnSharedPreferenceChangeListener(prefListener);
         }
 
         super.onDestroy();

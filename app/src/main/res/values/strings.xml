@@ -937,6 +937,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="settings_auto_tab_switch_summary">Automatically switch tabs based on game API</string>
     <string name="settings_auto_tab_battle">Switch to Battle tab on sortie</string>
     <string name="settings_auto_tab_quest">Switch to Quest tab on quest list</string>
+    <string name="settings_resizable_pane">Resizable pane divider</string>
+    <string name="settings_resizable_pane_summary">Drag the divider to resize left/right panels</string>
 
     <!-- Phase 8D: Tab titles -->
     <string name="panel_tab_battle">Battle</string>

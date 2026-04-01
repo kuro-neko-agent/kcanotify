@@ -299,6 +299,15 @@
             android:title="@string/settings_split_pane_enabled"
             android:summary="@string/settings_split_pane_enabled_summary" />
 
+        <!-- Phase 8D: Resizable pane divider -->
+        <CheckBoxPreference
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"
+            android:key="resizable_pane"
+            android:title="@string/settings_resizable_pane"
+            android:summary="@string/settings_resizable_pane_summary"
+            android:dependency="split_pane_enabled" />
+
         <!-- Phase 8D: API auto tab switch -->
         <CheckBoxPreference
             android:defaultValue="true"

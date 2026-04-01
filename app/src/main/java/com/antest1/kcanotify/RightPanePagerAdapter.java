@@ -8,8 +8,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 public class RightPanePagerAdapter extends FragmentStateAdapter {
     public static final int TAB_BATTLE = 0;
     public static final int TAB_QUEST = 1;
-    public static final int TAB_EQUIP = 2;
-    public static final int TAB_MENU = 3;
+    public static final int TAB_MENU = 2;
+    public static final int TAB_SETTINGS = 3;
     private static final int TAB_COUNT = 4;
 
     public RightPanePagerAdapter(@NonNull FragmentActivity fa) {
@@ -20,11 +20,11 @@ public class RightPanePagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case TAB_BATTLE: return new BattleFragment();
-            case TAB_QUEST:  return new QuestFragment();
-            case TAB_EQUIP:  return new EquipFragment();
-            case TAB_MENU:   return new MenuFragment();
-            default: return new EquipFragment();
+            case TAB_BATTLE:   return new BattleFragment();
+            case TAB_QUEST:    return new QuestFragment();
+            case TAB_MENU:     return new MenuFragment();
+            case TAB_SETTINGS: return new SettingsFragment();
+            default: return new MenuFragment();
         }
     }
 

@@ -862,6 +862,8 @@
     <string name="settings_auto_tab_switch_summary">Cambiar pestañas automáticamente según la API del juego</string>
     <string name="settings_auto_tab_battle">Cambiar a pestaña de batalla al salir</string>
     <string name="settings_auto_tab_quest">Cambiar a pestaña de misiones al ver lista</string>
+    <string name="settings_resizable_pane">Divisor de panel redimensionable</string>
+    <string name="settings_resizable_pane_summary">Arrastra el divisor para cambiar el tamaño de los paneles</string>
 
     <!-- Phase 8D: Tab titles -->
     <string name="panel_tab_battle">Batalla</string>

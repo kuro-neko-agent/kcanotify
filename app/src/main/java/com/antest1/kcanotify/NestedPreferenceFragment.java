@@ -62,8 +62,11 @@ public class NestedPreferenceFragment extends PreferenceFragmentCompat implement
             case FRAGMENT_ADV_NETWORK:
                 setPreferencesFromResource(R.xml.advance_network_settings, rootKey);
                 getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-                ((AppCompatActivity) getActivity()).getSupportActionBar()
-                        .setTitle(getString(R.string.setting_menu_kand_title_adv_network));
+                if (getActivity() instanceof AppCompatActivity) {
+                    androidx.appcompat.app.ActionBar ab =
+                            ((AppCompatActivity) getActivity()).getSupportActionBar();
+                    if (ab != null) ab.setTitle(getString(R.string.setting_menu_kand_title_adv_network));
+                }
                 break;
             default:
                 break;

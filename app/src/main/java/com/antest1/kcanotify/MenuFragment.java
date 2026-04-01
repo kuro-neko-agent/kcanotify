@@ -2,6 +2,7 @@ package com.antest1.kcanotify;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +26,10 @@ public class MenuFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_menu, container, false);
+        // Force dark theme so button text is readable on dark background
+        LayoutInflater darkInflater = inflater.cloneInContext(
+                new ContextThemeWrapper(requireContext(), R.style.AppThemeDark));
+        return darkInflater.inflate(R.layout.fragment_menu, container, false);
     }
 
     @Override
@@ -36,38 +40,41 @@ public class MenuFragment extends Fragment {
     }
 
     private void setupMenuButtons(LinearLayout container) {
-        addMenuButton(container, "Quest", v ->
+        addMenuButton(container, getString(R.string.viewmenu_quest), v ->
                 startPopupService(KcaQuestViewService.class,
                         KcaQuestViewService.SHOW_QUESTVIEW_ACTION_NEW));
-        addMenuButton(container, "Expedition Check", v ->
+        addMenuButton(container, getString(R.string.excheckview_title), v ->
                 startPopupService(KcaExpeditionCheckViewService.class,
                         KcaExpeditionCheckViewService.SHOW_EXCHECKVIEW_ACTION + "/0"));
-        addMenuButton(container, "Development", v ->
+        addMenuButton(container, getString(R.string.viewmenu_develop), v ->
                 startPopupService(KcaDevelopPopupService.class, null));
-        addMenuButton(container, "Construction", v ->
+        addMenuButton(container, getString(R.string.viewmenu_construction), v ->
                 startPopupService(KcaConstructPopupService.class,
                         KcaConstructPopupService.CONSTR_DATA_ACTION));
-        addMenuButton(container, "Docking", v ->
+        addMenuButton(container, getString(R.string.viewmenu_docking), v ->
                 startPopupService(KcaDockingPopupService.class,
                         KcaDockingPopupService.DOCKING_DATA_ACTION));
-        addMenuButton(container, "Map HP", v ->
+        addMenuButton(container, getString(R.string.viewmenu_maphp), v ->
                 startPopupService(KcaMapHpPopupService.class,
                         KcaMapHpPopupService.MAPHP_SHOW_ACTION));
-        addMenuButton(container, "Fleet Check", v ->
+        addMenuButton(container, getString(R.string.viewmenu_fchk), v ->
                 startPopupService(KcaFleetCheckPopupService.class,
                         KcaFleetCheckPopupService.FCHK_SHOW_ACTION));
-        addMenuButton(container, "Land Air Base", v ->
+        addMenuButton(container, getString(R.string.viewmenu_airbase_title), v ->
                 startPopupService(KcaLandAirBasePopupService.class,
                         KcaLandAirBasePopupService.LAB_DATA_ACTION));
-        addMenuButton(container, "Akashi", v ->
+        addMenuButton(container, getString(R.string.viewmenu_akashi), v ->
                 startPopupService(KcaAkashiViewService.class,
                         KcaAkashiViewService.SHOW_AKASHIVIEW_ACTION));
     }
 
     private void addMenuButton(LinearLayout container, String label, View.OnClickListener listener) {
         MaterialButton btn = new MaterialButton(
-                requireContext(), null, R.attr.materialButtonOutlinedStyle);
+                new ContextThemeWrapper(requireContext(), R.style.AppThemeDark),
+                null, R.attr.materialButtonOutlinedStyle);
         btn.setText(label);
+        btn.setTextColor(0xFFFFFFFF);
+        btn.setStrokeColorResource(R.color.white);
         btn.setTextSize(12);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
