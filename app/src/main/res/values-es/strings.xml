@@ -884,14 +884,14 @@
     <string name="quest_progress_in_progress">En progreso</string>
 
     <!-- Phase 8D: Resource labels -->
-    <string name="panel_res_fuel">Comb </string>
-    <string name="panel_res_ammo">Mun </string>
-    <string name="panel_res_steel">Acero </string>
-    <string name="panel_res_baux">Baux </string>
-    <string name="panel_res_build">Constr </string>
-    <string name="panel_res_repair">Repar </string>
-    <string name="panel_res_dev">Desar </string>
-    <string name="panel_res_screw">Torn </string>
+    <string name="panel_res_fuel">Comb</string>
+    <string name="panel_res_ammo">Mun</string>
+    <string name="panel_res_steel">Acero</string>
+    <string name="panel_res_baux">Baux</string>
+    <string name="panel_res_build">Constr</string>
+    <string name="panel_res_repair">Repar</string>
+    <string name="panel_res_dev">Desar</string>
+    <string name="panel_res_screw">Torn</string>
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="hq_label_ships">Naves</string>

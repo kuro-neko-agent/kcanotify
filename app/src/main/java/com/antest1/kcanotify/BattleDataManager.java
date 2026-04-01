@@ -205,14 +205,14 @@ public class BattleDataManager {
                         ((TextView) battleview.findViewById(R.id.friend_fleet_name))
                                 .setText(deckObj.get("api_name").getAsString());
                         bindFriendFleet(battleview, deck, shipMap, "fm", fc_flag || ec_flag,
-                                textsize_n_large, textsize_n_medium, textsize_c_large, textsize_c_medium, textsize_c_xsmall);
+                                textsize_n_large, textsize_c_large, textsize_c_medium);
                         if (deck.size() <= 6) battleview.findViewById(R.id.fm_7).setVisibility(View.GONE);
                         else if (deck.size() == 7 && deck.get(6).getAsInt() == -1) battleview.findViewById(R.id.fm_7).setVisibility(View.GONE);
                     } else if (i == 1) {
                         ((TextView) battleview.findViewById(R.id.friend_combined_fleet_name))
                                 .setText(deckObj.get("api_name").getAsString());
                         bindFriendFleet(battleview, deck, shipMap, "fs", true,
-                                textsize_n_large, textsize_n_medium, textsize_c_large, textsize_c_medium, textsize_c_xsmall);
+                                textsize_n_large, textsize_c_large, textsize_c_medium);
                     }
                 }
             }
@@ -397,7 +397,7 @@ public class BattleDataManager {
     }
 
     private void bindFriendFleet(View battleview, JsonArray deck, JsonObject shipMap, String prefix,
-                                  boolean combined, int tsNL, int tsNM, int tsCL, int tsCM, int tsCXS) {
+                                  boolean combined, int tsNL, int tsCL, int tsCM) {
         for (int j = 0; j < deck.size(); j++) {
             if (deck.get(j).getAsInt() == -1) {
                 battleview.findViewById(getId(KcaUtils.format("%s_%d", prefix, j + 1), R.id.class)).setVisibility(View.INVISIBLE);

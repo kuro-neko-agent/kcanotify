@@ -24,7 +24,7 @@
             android:id="@+id/pane_divider"
             android:layout_width="8dp"
             android:layout_height="match_parent"
-            android:background="#40FFFFFF" />
+            android:background="@color/colorDividerLight" />
 
         <!-- 右面板: ViewPager2+TabLayout -->
         <FrameLayout

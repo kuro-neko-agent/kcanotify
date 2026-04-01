@@ -660,10 +660,6 @@ public class KcaViewButtonService extends BaseService {
         }
     }
 
-    private boolean isAutoLaunchEnabled() {
-        return getBooleanPreferences(getApplicationContext(), PREF_PANEL_AUTO_LAUNCH);
-    }
-
     private final View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {

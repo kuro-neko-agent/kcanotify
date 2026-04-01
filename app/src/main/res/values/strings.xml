@@ -959,14 +959,14 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="quest_progress_in_progress">In progress</string>
 
     <!-- Phase 8D: Resource labels -->
-    <string name="panel_res_fuel">Fuel </string>
-    <string name="panel_res_ammo">Ammo </string>
-    <string name="panel_res_steel">Steel </string>
-    <string name="panel_res_baux">Baux </string>
-    <string name="panel_res_build">Build </string>
-    <string name="panel_res_repair">Repair </string>
-    <string name="panel_res_dev">Dev </string>
-    <string name="panel_res_screw">Screw </string>
+    <string name="panel_res_fuel">Fuel</string>
+    <string name="panel_res_ammo">Ammo</string>
+    <string name="panel_res_steel">Steel</string>
+    <string name="panel_res_baux">Baux</string>
+    <string name="panel_res_build">Build</string>
+    <string name="panel_res_repair">Repair</string>
+    <string name="panel_res_dev">Dev</string>
+    <string name="panel_res_screw">Screw</string>
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="hq_label_ships">Ships</string>

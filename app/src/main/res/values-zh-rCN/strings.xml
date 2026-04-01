@@ -887,14 +887,14 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="quest_progress_in_progress">进行中</string>
 
     <!-- Phase 8D: Resource labels -->
-    <string name="panel_res_fuel">燃料 </string>
-    <string name="panel_res_ammo">弹药 </string>
-    <string name="panel_res_steel">钢材 </string>
-    <string name="panel_res_baux">铝土 </string>
-    <string name="panel_res_build">建造 </string>
-    <string name="panel_res_repair">修复 </string>
-    <string name="panel_res_dev">开发 </string>
-    <string name="panel_res_screw">螺丝 </string>
+    <string name="panel_res_fuel">燃料</string>
+    <string name="panel_res_ammo">弹药</string>
+    <string name="panel_res_steel">钢材</string>
+    <string name="panel_res_baux">铝土</string>
+    <string name="panel_res_build">建造</string>
+    <string name="panel_res_repair">修复</string>
+    <string name="panel_res_dev">开发</string>
+    <string name="panel_res_screw">螺丝</string>
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="hq_label_ships">舰船</string>

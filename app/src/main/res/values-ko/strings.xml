@@ -881,14 +881,14 @@
     <string name="quest_progress_in_progress">수행중</string>
 
     <!-- Phase 8D: Resource labels -->
-    <string name="panel_res_fuel">연료 </string>
-    <string name="panel_res_ammo">탄약 </string>
-    <string name="panel_res_steel">강재 </string>
-    <string name="panel_res_baux">보크 </string>
-    <string name="panel_res_build">건조 </string>
-    <string name="panel_res_repair">수리 </string>
-    <string name="panel_res_dev">개발 </string>
-    <string name="panel_res_screw">나사 </string>
+    <string name="panel_res_fuel">연료</string>
+    <string name="panel_res_ammo">탄약</string>
+    <string name="panel_res_steel">강재</string>
+    <string name="panel_res_baux">보크</string>
+    <string name="panel_res_build">건조</string>
+    <string name="panel_res_repair">수리</string>
+    <string name="panel_res_dev">개발</string>
+    <string name="panel_res_screw">나사</string>
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="hq_label_ships">함선</string>

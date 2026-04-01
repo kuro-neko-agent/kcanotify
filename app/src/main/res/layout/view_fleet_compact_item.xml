@@ -81,7 +81,7 @@
         android:id="@+id/compact_equip_detail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#20FFFFFF"
+        android:background="@color/colorOverlaySubtle"
         android:orientation="vertical"
         android:paddingHorizontal="8dp"
         android:paddingVertical="2dp"

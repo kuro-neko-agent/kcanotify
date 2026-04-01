@@ -14,7 +14,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_fuel" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_fuel"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_fuel"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -26,7 +27,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_ammo" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_ammo"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_ammo"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -38,7 +40,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_steel" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_steel"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_steel"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -50,7 +53,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_bauxite" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_bauxite"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_bauxite"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -62,7 +66,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_repair" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_repair"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_instant_repair"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -74,7 +79,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_build" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_build"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_instant_build"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -86,7 +92,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_dev_material" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_dev_material"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_dev_material"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"
@@ -98,7 +105,8 @@
         android:layout_columnWeight="1" android:gravity="center_vertical"
         android:orientation="horizontal" android:paddingHorizontal="2dp">
         <ImageView android:layout_width="16dp" android:layout_height="16dp"
-            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_screw" />
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_screw"
+            android:importantForAccessibility="no" />
         <TextView android:id="@+id/res_screw"
             android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:gravity="end" android:text="0"

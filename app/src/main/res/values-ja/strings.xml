@@ -881,14 +881,14 @@
     <string name="quest_progress_in_progress">遂行中</string>
 
     <!-- Phase 8D: Resource labels -->
-    <string name="panel_res_fuel">燃料 </string>
-    <string name="panel_res_ammo">弾薬 </string>
-    <string name="panel_res_steel">鋼材 </string>
-    <string name="panel_res_baux">ボーキ </string>
-    <string name="panel_res_build">建造 </string>
-    <string name="panel_res_repair">修復 </string>
-    <string name="panel_res_dev">開発 </string>
-    <string name="panel_res_screw">ネジ </string>
+    <string name="panel_res_fuel">燃料</string>
+    <string name="panel_res_ammo">弾薬</string>
+    <string name="panel_res_steel">鋼材</string>
+    <string name="panel_res_baux">ボーキ</string>
+    <string name="panel_res_build">建造</string>
+    <string name="panel_res_repair">修復</string>
+    <string name="panel_res_dev">開発</string>
+    <string name="panel_res_screw">ネジ</string>
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="hq_label_ships">艦船</string>

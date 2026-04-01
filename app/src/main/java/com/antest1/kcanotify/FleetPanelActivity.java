@@ -78,7 +78,6 @@ import static com.antest1.kcanotify.KcaConstants.SEEK_PURE;
 import static com.antest1.kcanotify.KcaService.BROADCAST_REFRESH_FLEETVIEW;
 import static com.antest1.kcanotify.KcaUseStatConstant.FV_BTN_PRESS;
 import static com.antest1.kcanotify.KcaApiData.getQuestTrackInfo;
-import static com.antest1.kcanotify.KcaApiData.isQuestTrackable;
 import static com.antest1.kcanotify.KcaUtils.getId;
 import static com.antest1.kcanotify.KcaUtils.getIdWithFallback;
 import static com.antest1.kcanotify.KcaUtils.getBooleanPreferences;
@@ -243,7 +242,7 @@ public class FleetPanelActivity extends BaseActivity {
                     boolean enabled = prefs.getBoolean(key, false);
                     if (enabled) {
                         dividerRef.setVisibility(View.VISIBLE);
-                        dividerRef.setBackgroundColor(0x40FFFFFF);
+                        dividerRef.setBackgroundColor(ContextCompat.getColor(FleetPanelActivity.this, R.color.colorDividerLight));
                         restoreLeftPaneWidth(leftPaneRef);
                         setupDividerDrag(dividerRef, leftPaneRef);
                     } else {
@@ -887,7 +886,7 @@ public class FleetPanelActivity extends BaseActivity {
         if (slotEx != 0) {
             // Divider line between main slots and extra slot
             View divider = new View(this);
-            divider.setBackgroundColor(0x40FFFFFF);
+            divider.setBackgroundColor(ContextCompat.getColor(this, R.color.colorDividerLight));
             LinearLayout.LayoutParams divLp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * density));
             divLp.setMargins(0, (int) (2 * density), 0, (int) (2 * density));
@@ -1178,7 +1177,7 @@ public class FleetPanelActivity extends BaseActivity {
                     return true;
                 case android.view.MotionEvent.ACTION_UP:
                 case android.view.MotionEvent.ACTION_CANCEL:
-                    divider.setBackgroundColor(0x40FFFFFF); // restore
+                    divider.setBackgroundColor(ContextCompat.getColor(FleetPanelActivity.this, R.color.colorDividerLight)); // restore
                     // Save the width
                     ViewGroup.LayoutParams finalLp = leftPane.getLayoutParams();
                     getSharedPreferences("fleet_panel", MODE_PRIVATE)

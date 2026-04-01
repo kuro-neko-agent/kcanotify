@@ -286,6 +286,9 @@
     <color name="colorGunfit3">#a7ffeb</color>
     <color name="colorGunfit4">#1de9b6</color>
 
+    <color name="colorDividerLight">#40FFFFFF</color>
+    <color name="colorOverlaySubtle">#20FFFFFF</color>
+
     <!-- Phase 9: HQ info and resource regen -->
     <color name="colorHqInfoBg">#2A2D3E</color>
     <color name="colorRegenActive">#4CAF50</color>
