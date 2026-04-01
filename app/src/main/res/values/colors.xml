@@ -286,5 +286,10 @@
     <color name="colorGunfit3">#a7ffeb</color>
     <color name="colorGunfit4">#1de9b6</color>
 
+    <!-- Phase 9: HQ info and resource regen -->
+    <color name="colorHqInfoBg">#2A2D3E</color>
+    <color name="colorRegenActive">#4CAF50</color>
+    <color name="colorSlotWarning">#FFB300</color>
+    <color name="colorSlotDanger">#FF5252</color>
 
 </resources>

@@ -890,4 +890,16 @@
 
     <!-- Phase 8D: Equip placeholder -->
     <string name="panel_equip_coming_soon">준비 중</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">원수</string>
+    <string name="hq_rank_2">대장</string>
+    <string name="hq_rank_3">중장</string>
+    <string name="hq_rank_4">소장</string>
+    <string name="hq_rank_5">대좌</string>
+    <string name="hq_rank_6">중좌</string>
+    <string name="hq_rank_7">소좌</string>
+    <string name="hq_rank_8">중좌</string>
+    <string name="hq_rank_9">대위</string>
+    <string name="hq_rank_10">소위</string>
 </resources>
