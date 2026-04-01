@@ -12,3 +12,9 @@
 # Build artifacts
 app/.cxx/
 app/google-services.json
+
+# Plan/handoff docs
+SPLIT-SCREEN-PLAN.md
+CLAUDE-CODE-HANDOFF.md
+PHASE-*.md
+QUEST-*.md
