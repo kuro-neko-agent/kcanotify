@@ -280,9 +280,11 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
     }
 
     public void showObtainingPermissionOverlayWindow() {
-        String package_name = getContext().getPackageName();
+        Context ctx = getContext();
+        if (ctx == null) return;
+        String package_name = ctx.getPackageName();
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + package_name));
-        if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+        if (intent.resolveActivity(ctx.getPackageManager()) == null) {
             intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + package_name));
             showToast(getActivity(), getString(R.string.sa_overlay_appearontop), Toast.LENGTH_LONG);
         }
@@ -292,10 +294,12 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
 
     @TargetApi(Build.VERSION_CODES.M)
     public void showObtainingPermissionBatteryOptimization() {
-        String package_name = getContext().getPackageName();
+        Context ctx = getContext();
+        if (ctx == null) return;
+        String package_name = ctx.getPackageName();
         Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
 
-        if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+        if (intent.resolveActivity(ctx.getPackageManager()) == null) {
             intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + package_name));
             showToast(getActivity(), getString(R.string.sa_batteryoptim_appearontop), Toast.LENGTH_LONG);
         }
@@ -427,11 +431,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
                     break;
                 case PREF_DISPLAY_MODE:
                     // Close any existing fleet views when mode changes
-                    Intent closeOverlay = new Intent(getContext(), KcaFleetViewService.class);
-                    closeOverlay.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
-                    getContext().startService(closeOverlay);
-                    LocalBroadcastManager.getInstance(getContext())
-                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                    Context dmCtx = getContext();
+                    if (dmCtx != null) {
+                        Intent closeOverlay = new Intent(dmCtx, KcaFleetViewService.class);
+                        closeOverlay.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
+                        dmCtx.startService(closeOverlay);
+                        LocalBroadcastManager.getInstance(dmCtx)
+                                .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                    }
                     updateAutoLaunchAvailability();
                     break;
                 case PREF_FAIRY_OPACITY:
@@ -477,10 +484,12 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
      * Non-split mode: greyed out with "only available in split-screen" hint.
      */
     private void updateAutoLaunchAvailability() {
+        Context ctx = getContext();
+        if (ctx == null) return;
         CheckBoxPreference autoLaunchPref =
                 (CheckBoxPreference) findPreference(PREF_PANEL_AUTO_LAUNCH);
         if (autoLaunchPref != null) {
-            String displayMode = getStringPreferences(getContext(), PREF_DISPLAY_MODE);
+            String displayMode = getStringPreferences(ctx, PREF_DISPLAY_MODE);
             boolean isSplit = DISPLAY_MODE_SPLIT.equals(displayMode);
             autoLaunchPref.setEnabled(isSplit);
             if (!isSplit) {
@@ -784,6 +793,8 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
     }
 
     private void makeTestNotification() {
+        Context ctx = getContext();
+        if (ctx == null) return;
         try {
             notificationManager.cancel(TEST_NOTI_ID);
 
@@ -792,20 +803,20 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
             String content = sdf.format(new Date());
 
             Bitmap testBitmap = KcaUtils.decodeSampledBitmapFromResource(getResources(), R.mipmap.expedition_notify_bigicon, 128, 128);
-            NotificationCompat.Builder builder = createBuilder(getContext(), notification_id)
+            NotificationCompat.Builder builder = createBuilder(ctx, notification_id)
                     .setSmallIcon(R.mipmap.expedition_notify_icon)
                     .setLargeIcon(testBitmap)
                     .setContentTitle(title)
                     .setContentText(content)
                     .setAutoCancel(false)
                     .setTicker(title);
-            builder = setSoundSetting(getContext(), mAudioManager, builder);
+            builder = setSoundSetting(ctx, mAudioManager, builder);
             Notification noti = builder.build();
             noti.flags = Notification.FLAG_AUTO_CANCEL;
             notificationManager.notify(TEST_NOTI_ID, noti);
 
         } catch (Exception e) {
-            Toast.makeText(getContext(), "something went wrong: check error log", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ctx, "something went wrong: check error log", Toast.LENGTH_SHORT).show();
             dbHelper.recordErrorLog(ERROR_TYPE_SETTING, "noti_test_show", "", "", getStringFromException(e));
         }
     }

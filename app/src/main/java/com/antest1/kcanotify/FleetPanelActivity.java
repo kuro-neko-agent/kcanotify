@@ -1590,9 +1590,10 @@ public class FleetPanelActivity extends BaseActivity {
 
     private void stopTimer() {
         if (timeScheduler != null) {
-            timeScheduler.shutdown();
+            timeScheduler.shutdownNow();
             timeScheduler = null;
         }
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     /**

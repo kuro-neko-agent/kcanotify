@@ -1176,14 +1176,9 @@ public class KcaFleetViewService extends BaseService {
         }
     }
 
+    // Dead code: callers use FleetDataManager.loadGunfitData(). Delegating to avoid breakage.
     public static JsonObject loadGunfitData(AssetManager am) {
-        try {
-            AssetManager.AssetInputStream ais = (AssetManager.AssetInputStream) am.open("gunfit.json");
-            byte[] bytes = ByteStreams.toByteArray(ais);
-            return JsonParser.parseString(new String(bytes)).getAsJsonObject();
-        } catch (IOException e) {
-            return new JsonObject();
-        }
+        return FleetDataManager.loadGunfitData(am);
     }
 
     private void sendReport(Exception e, int type) {

@@ -69,6 +69,8 @@ public class QuestFragment extends Fragment implements QuestDataManager.QuestPop
         noDataText = view.findViewById(R.id.quest_no_data_text);
         contentContainer = view.findViewById(R.id.quest_content_container);
 
+        if (dbHelper != null) dbHelper.close();
+        if (questTracker != null) questTracker.close();
         dbHelper = new KcaDBHelper(requireContext(), null, KCANOTIFY_DB_VERSION);
         questTracker = new KcaQuestTracker(requireContext(), null, KCANOTIFY_QTDB_VERSION);
         questDataManager = new QuestDataManager(requireContext(), dbHelper, questTracker);
