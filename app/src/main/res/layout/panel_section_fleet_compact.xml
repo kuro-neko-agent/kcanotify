@@ -84,7 +84,7 @@
             android:ellipsize="marquee"
             android:paddingHorizontal="6dp"
             android:paddingVertical="1dp"
-            android:singleLine="true"
+            android:maxLines="1"
             android:textColor="@color/white"
             android:textSize="9sp"
             tools:text="制空 312~368 / 索敵 54.2 / 高速" />

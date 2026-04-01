@@ -906,7 +906,10 @@
     <string name="hq_rank_5">Capitán</string>
     <string name="hq_rank_6">Comandante</string>
     <string name="hq_rank_7">Tte. Comandante</string>
-    <string name="hq_rank_8">Tte. Comandante</string>
-    <string name="hq_rank_9">Teniente</string>
+    <string name="hq_rank_8">Teniente</string>
+    <string name="hq_rank_9">Subteniente</string>
     <string name="hq_rank_10">Alférez</string>
+    <string name="panel_waiting_battle">Esperando batalla</string>
+    <string name="panel_waiting_quest">Esperando misión</string>
+    <string name="panel_slot_empty">\u3000Vacío</string>
 </resources>

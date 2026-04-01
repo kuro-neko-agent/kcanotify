@@ -11,7 +11,7 @@
         android:id="@+id/battle_placeholder_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Waiting for battle..."
+        android:text="@string/panel_waiting_battle"
         android:textColor="@color/white"
         android:textSize="14sp" />
 </LinearLayout>

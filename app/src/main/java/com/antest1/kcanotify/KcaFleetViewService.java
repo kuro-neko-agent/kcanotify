@@ -130,7 +130,7 @@ public class KcaFleetViewService extends BaseService {
     private WindowManager windowManager;
     private ScrollView fleetMenu;
     private ImageView fleetMenuArrowUp, fleetMenuArrowDown;
-    static boolean isReady;
+    static volatile boolean isReady;
     private static int[] hqinfoItems = {-1, -1, -1, -1};
     private static int hqinfoState = 0;
     private JsonObject gunfitData;

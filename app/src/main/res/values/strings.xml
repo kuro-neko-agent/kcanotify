@@ -981,7 +981,10 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="hq_rank_5">Captain</string>
     <string name="hq_rank_6">Commander</string>
     <string name="hq_rank_7">Lt Commander</string>
-    <string name="hq_rank_8">Lt Commander</string>
-    <string name="hq_rank_9">Lieutenant</string>
+    <string name="hq_rank_8">Lieutenant</string>
+    <string name="hq_rank_9">Lt Junior Grade</string>
     <string name="hq_rank_10">Ensign</string>
+    <string name="panel_waiting_battle">Waiting for battle</string>
+    <string name="panel_waiting_quest">Waiting for quest</string>
+    <string name="panel_slot_empty">\u3000Empty</string>
 </resources>

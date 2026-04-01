@@ -11,7 +11,7 @@
         android:id="@+id/quest_placeholder_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Waiting for quest list..."
+        android:text="@string/panel_waiting_quest"
         android:textColor="@color/white"
         android:textSize="14sp" />
 </LinearLayout>

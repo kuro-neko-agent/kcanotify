@@ -903,7 +903,10 @@
     <string name="hq_rank_5">대좌</string>
     <string name="hq_rank_6">중좌</string>
     <string name="hq_rank_7">소좌</string>
-    <string name="hq_rank_8">중좌</string>
-    <string name="hq_rank_9">대위</string>
+    <string name="hq_rank_8">대위</string>
+    <string name="hq_rank_9">중위</string>
     <string name="hq_rank_10">소위</string>
+    <string name="panel_waiting_battle">전투 대기중</string>
+    <string name="panel_waiting_quest">임무 대기중</string>
+    <string name="panel_slot_empty">\u3000빈칸</string>
 </resources>

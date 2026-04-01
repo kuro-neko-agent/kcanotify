@@ -168,10 +168,13 @@ public class FleetDataManager {
     }
 
     public void advanceHqInfoState() {
-        hqinfoState = (hqinfoState + 1) % HQINFO_TOTAL;
-        if (hqinfoState >= HQINFO_ITEMCNT1 && hqinfoItems[hqinfoState - HQINFO_ITEMCNT1] == -1) {
-            advanceHqInfoState();
+        for (int i = 0; i < 4; i++) {
+            hqinfoState = (hqinfoState + 1) % HQINFO_TOTAL;
+            if (hqinfoState < HQINFO_ITEMCNT1 || hqinfoItems[hqinfoState - HQINFO_ITEMCNT1] != -1) {
+                return;
+            }
         }
+        hqinfoState = 1;
     }
 
     private void updateHqInfoVisibility(View hqInfoView) {
@@ -194,7 +197,11 @@ public class FleetDataManager {
         View hqInfoView = rootView.findViewById(R.id.fleetview_hqinfo);
         String[] pref_items = {PREF_FV_ITEM_1, PREF_FV_ITEM_2, PREF_FV_ITEM_3, PREF_FV_ITEM_4};
         for (int i = 0; i < pref_items.length; i++) {
-            hqinfoItems[i] = Integer.parseInt(getStringPreferences(context, pref_items[i]));
+            try {
+                hqinfoItems[i] = Integer.parseInt(getStringPreferences(context, pref_items[i]));
+            } catch (NumberFormatException e) {
+                hqinfoItems[i] = -1;
+            }
         }
         updateHqInfoVisibility(hqInfoView);
         switch (hqinfoState) {
@@ -729,8 +736,7 @@ public class FleetDataManager {
     // ==================== Static helpers ====================
 
     public static JsonObject loadGunfitData(AssetManager am) {
-        try {
-            AssetManager.AssetInputStream ais = (AssetManager.AssetInputStream) am.open("gunfit.json");
+        try (java.io.InputStream ais = am.open("gunfit.json")) {
             byte[] bytes = ByteStreams.toByteArray(ais);
             return JsonParser.parseString(new String(bytes)).getAsJsonObject();
         } catch (IOException e) {

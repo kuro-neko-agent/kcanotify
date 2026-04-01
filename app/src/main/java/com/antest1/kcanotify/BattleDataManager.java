@@ -157,7 +157,7 @@ public class BattleDataManager {
             fc_flag = KcaBattle.isCombinedFleetInSortie();
             ec_flag = api_event_id != API_NODE_EVENT_ID_NOEVENT &&
                     (api_event_kind == API_NODE_EVENT_KIND_ECBATTLE || api_event_kind == API_NODE_EVENT_KIND_NIGHTDAYBATTLE_EC);
-            setViewLayout(battleview, fc_flag, false);
+            setViewLayout(battleview, fc_flag, ec_flag);
 
             ((TextView) battleview.findViewById(R.id.battle_node)).setText(nodeInfo);
             ((TextView) battleview.findViewById(R.id.battle_result)).setText("");
@@ -190,14 +190,16 @@ public class BattleDataManager {
                 }
                 battleview.findViewById(R.id.fm_7).setVisibility(View.INVISIBLE);
 
+                // W4: Build shipMap once before the deck loop
+                JsonObject shipMap = new JsonObject();
+                for (int j = 0; j < portData.size(); j++) {
+                    JsonObject d = portData.get(j).getAsJsonObject();
+                    shipMap.add(String.valueOf(d.get("api_id").getAsInt()), d);
+                }
+
                 for (int i = 0; i < deckData.size(); i++) {
                     JsonObject deckObj = deckData.get(i).getAsJsonObject();
                     JsonArray deck = deckObj.getAsJsonArray("api_ship");
-                    JsonObject shipMap = new JsonObject();
-                    for (int j = 0; j < portData.size(); j++) {
-                        JsonObject d = portData.get(j).getAsJsonObject();
-                        shipMap.add(String.valueOf(d.get("api_id").getAsInt()), d);
-                    }
 
                     if (i == 0) {
                         ((TextView) battleview.findViewById(R.id.friend_fleet_name))
@@ -447,14 +449,16 @@ public class BattleDataManager {
     }
 
     private void bindRankData(View battleview, JsonObject rankData) {
-        if (rankData.has("fnowhpsum")) {
+        if (rankData == null) return;
+
+        if (rankData.has("fnowhpsum") && rankData.has("fafterhpsum") && rankData.has("fdmgrate")) {
             int fNow = rankData.get("fnowhpsum").getAsInt();
             int fAfter = rankData.get("fafterhpsum").getAsInt();
             int fRate = rankData.get("fdmgrate").getAsInt();
             ((TextView) battleview.findViewById(R.id.friend_fleet_damage))
                     .setText(KcaUtils.format("%d/%d (%d%%)", fAfter, fNow, fRate));
         }
-        if (rankData.has("enowhpsum")) {
+        if (rankData.has("enowhpsum") && rankData.has("eafterhpsum") && rankData.has("edmgrate")) {
             int eNow = rankData.get("enowhpsum").getAsInt();
             int eAfter = rankData.get("eafterhpsum").getAsInt();
             int eRate = rankData.get("edmgrate").getAsInt();
@@ -462,16 +466,18 @@ public class BattleDataManager {
                     .setText(KcaUtils.format("%d/%d (%d%%)", eAfter, eNow, eRate));
         }
 
-        int rank = rankData.get("rank").getAsInt();
-        int[] rankStrIds = {R.string.rank_e, R.string.rank_d, R.string.rank_c, R.string.rank_b,
-                R.string.rank_a, R.string.rank_s, R.string.rank_ss};
-        int[] rankColorIds = {R.color.colorRankE, R.color.colorRankD, R.color.colorRankC, R.color.colorRankB,
-                R.color.colorRankA, R.color.colorRankS, R.color.colorRankS};
-        if (rank >= 0 && rank < rankStrIds.length) {
-            ((TextView) battleview.findViewById(R.id.battle_result))
-                    .setText(context.getString(rankStrIds[rank]));
-            ((TextView) battleview.findViewById(R.id.battle_result))
-                    .setTextColor(ContextCompat.getColor(context, rankColorIds[rank]));
+        if (rankData.has("rank")) {
+            int rank = rankData.get("rank").getAsInt();
+            int[] rankStrIds = {R.string.rank_e, R.string.rank_d, R.string.rank_c, R.string.rank_b,
+                    R.string.rank_a, R.string.rank_s, R.string.rank_ss};
+            int[] rankColorIds = {R.color.colorRankE, R.color.colorRankD, R.color.colorRankC, R.color.colorRankB,
+                    R.color.colorRankA, R.color.colorRankS, R.color.colorRankS};
+            if (rank >= 0 && rank < rankStrIds.length) {
+                ((TextView) battleview.findViewById(R.id.battle_result))
+                        .setText(context.getString(rankStrIds[rank]));
+                ((TextView) battleview.findViewById(R.id.battle_result))
+                        .setTextColor(ContextCompat.getColor(context, rankColorIds[rank]));
+            }
         }
     }
 }

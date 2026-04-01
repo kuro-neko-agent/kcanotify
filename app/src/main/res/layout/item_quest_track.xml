@@ -43,7 +43,8 @@
                 android:textColor="@color/white"
                 android:textSize="9sp"
                 android:textStyle="bold"
-                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:gravity="center" />
 
             <!-- Quest title -->
@@ -53,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:singleLine="true"
+                android:maxLines="1"
                 android:textColor="@color/white"
                 android:textSize="11sp" />
 
@@ -66,8 +67,10 @@
                 android:paddingEnd="4dp"
                 android:paddingLeft="4dp"
                 android:paddingRight="4dp"
+                android:textColor="@android:color/white"
                 android:textSize="10sp"
-                android:singleLine="true" />
+                android:maxLines="1"
+                android:ellipsize="end" />
 
             <!-- Expand/collapse chevron -->
             <TextView
@@ -90,7 +93,7 @@
             android:paddingLeft="24dp"
             android:textColor="#AAAAAA"
             android:textSize="9sp"
-            android:singleLine="true"
+            android:maxLines="1"
             android:ellipsize="end"
             android:visibility="gone" />
 

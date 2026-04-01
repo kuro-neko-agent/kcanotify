@@ -27,6 +27,7 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import androidx.viewpager2.widget.ViewPager2;
@@ -170,6 +171,11 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Extract the fleetviewpanel (inner LinearLayout) from the DraggableOverlayLayout
         fleetContentView = inflatedView.findViewById(R.id.fleetviewpanel);
+        if (fleetContentView == null) {
+            Log.e(TAG, "fleetviewpanel not found in inflated layout");
+            finish();
+            return;
+        }
 
         // Remove from its parent (the DraggableOverlayLayout)
         if (fleetContentView.getParent() != null) {
@@ -271,7 +277,11 @@ public class FleetPanelActivity extends BaseActivity {
         }
 
         if (seekcn_internal == -1) {
-            seekcn_internal = Integer.parseInt(getStringPreferences(getApplicationContext(), PREF_KCA_SEEK_CN));
+            try {
+                seekcn_internal = Integer.parseInt(getStringPreferences(getApplicationContext(), PREF_KCA_SEEK_CN));
+            } catch (NumberFormatException e) {
+                seekcn_internal = 0;
+            }
         }
 
         setupClickListeners();
@@ -446,12 +456,23 @@ public class FleetPanelActivity extends BaseActivity {
         }
 
         String order_data = getStringPreferences(getApplicationContext(), PREF_FV_MENU_ORDER);
+        boolean orderApplied = false;
         if (!order_data.isEmpty()) {
-            JsonArray order = JsonParser.parseString(order_data).getAsJsonArray();
-            for (int i = 0; i < order.size(); i++) {
-                fleetMenuArea.addView(menuBtnList.get(order.get(i).getAsInt()));
+            try {
+                JsonArray order = JsonParser.parseString(order_data).getAsJsonArray();
+                for (int i = 0; i < order.size(); i++) {
+                    int idx = order.get(i).getAsInt();
+                    if (idx >= 0 && idx < menuBtnList.size()) {
+                        fleetMenuArea.addView(menuBtnList.get(idx));
+                    }
+                }
+                orderApplied = true;
+            } catch (Exception e) {
+                // Malformed JSON — fall through to default order
+                fleetMenuArea.removeAllViews();
             }
-        } else {
+        }
+        if (!orderApplied) {
             for (TextView tv : menuBtnList) {
                 fleetMenuArea.addView(tv);
             }
@@ -507,6 +528,7 @@ public class FleetPanelActivity extends BaseActivity {
     }
 
     private int itemPopupSelected = -1;
+    private JsonArray cachedDeckportForPopup = null; // C3: cached to avoid DB queries on ACTION_MOVE
 
     @SuppressLint("ClickableViewAccessibility")
     private final View.OnTouchListener fleetViewItemTouchListener = (v, event) -> {
@@ -516,29 +538,32 @@ public class FleetPanelActivity extends BaseActivity {
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
             case MotionEvent.ACTION_DOWN:
-                JsonArray deckportCheck = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
-                if (deckportCheck == null) break;
+                // C3: Only query DB on ACTION_DOWN, reuse cached data on ACTION_MOVE
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    cachedDeckportForPopup = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
+                }
+                if (cachedDeckportForPopup == null) break;
 
                 for (int i = 0; i < 12; i++) {
                     if (isInsideView(fleetDataManager.getFleetViewItem(fleetContentView, i), x, y)) {
                         if (itemPopupSelected != i) {
-                            // Load data for new selection
+                            // Load data for new selection using cached deckport
                             JsonArray data;
                             int shipIndex;
                             if (fleetDataManager.isCombined(selectedFleetIndex)) {
                                 if (i < 6) {
                                     data = deckInfoCalc.getDeckListInfo(
-                                            dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                            cachedDeckportForPopup,
                                             0, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
                                 } else {
                                     data = deckInfoCalc.getDeckListInfo(
-                                            dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                            cachedDeckportForPopup,
                                             1, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
                                 }
                                 shipIndex = i % 6;
                             } else {
                                 data = deckInfoCalc.getDeckListInfo(
-                                        dbHelper.getJsonArrayValue(DB_KEY_DECKPORT),
+                                        cachedDeckportForPopup,
                                         selectedFleetIndex, DECKINFO_REQ_LIST, KC_DECKINFO_REQ_LIST);
                                 shipIndex = i;
                             }
@@ -597,6 +622,7 @@ public class FleetPanelActivity extends BaseActivity {
                     itemPopupWindow.dismiss();
                 }
                 itemPopupSelected = -1;
+                cachedDeckportForPopup = null; // C3: release cached data
                 break;
         }
         return false;
@@ -649,15 +675,15 @@ public class FleetPanelActivity extends BaseActivity {
             TextView tab = leftPaneView.findViewById(tabIds[i]);
             if (tab == null) continue;
             if (i == selectedFleetIndex) {
-                tab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                tab.setBackgroundColor(ContextCompat.getColor(this,R.color.colorAccent));
             } else {
                 if (i < 4 && KcaExpedition2.isInExpedition(i)) {
-                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoExpedition));
+                    tab.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoExpedition));
                 } else if (i < 4 && KcaMoraleInfo.getMoraleCompleteTime(i) > 0) {
-                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+                    tab.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoNotGoodStatus));
                 } else if (i == FLEET_COMBINED_ID &&
                         (KcaMoraleInfo.getMoraleCompleteTime(0) > 0 || KcaMoraleInfo.getMoraleCompleteTime(1) > 0)) {
-                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+                    tab.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoNotGoodStatus));
                 } else {
                     tab.setBackgroundColor(0x00000000); // transparent
                 }
@@ -678,7 +704,7 @@ public class FleetPanelActivity extends BaseActivity {
         if (!KcaFleetViewService.isReady || deckportdata == null || deckportdata.size() == 0) {
             TextView infoLine = leftPaneView.findViewById(R.id.compact_fleet_info);
             if (infoLine != null) {
-                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNoShip));
+                infoLine.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoNoShip));
                 infoLine.setText(getString(R.string.kca_init_content));
             }
             return;
@@ -739,15 +765,15 @@ public class FleetPanelActivity extends BaseActivity {
             TextView hpView = row.findViewById(R.id.compact_hp);
             hpView.setText(nowHp + "/" + maxHp);
             if (nowHp * 4 <= maxHp) {
-                hpView.setTextColor(getResources().getColor(R.color.colorHeavyDmgState));
+                hpView.setTextColor(ContextCompat.getColor(this,R.color.colorHeavyDmgState));
             } else if (nowHp * 2 <= maxHp) {
-                hpView.setTextColor(getResources().getColor(R.color.colorModerateDmgState));
+                hpView.setTextColor(ContextCompat.getColor(this,R.color.colorModerateDmgState));
             } else if (nowHp * 4 <= maxHp * 3) {
-                hpView.setTextColor(getResources().getColor(R.color.colorLightDmgState));
+                hpView.setTextColor(ContextCompat.getColor(this,R.color.colorLightDmgState));
             } else if (nowHp < maxHp) {
-                hpView.setTextColor(getResources().getColor(R.color.colorNormalState));
+                hpView.setTextColor(ContextCompat.getColor(this,R.color.colorNormalState));
             } else {
-                hpView.setTextColor(getResources().getColor(R.color.colorFullState));
+                hpView.setTextColor(ContextCompat.getColor(this,R.color.colorFullState));
             }
 
             // HP bar
@@ -758,27 +784,27 @@ public class FleetPanelActivity extends BaseActivity {
             // Heavy damage background warning on the row
             if (nowHp * 4 <= maxHp) {
                 View mainRow = row.findViewById(R.id.compact_main_row);
-                mainRow.setBackgroundColor(getResources().getColor(R.color.colorFleetWarning));
+                mainRow.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetWarning));
             }
 
             // Cond badge
             TextView condView = row.findViewById(R.id.compact_cond);
             condView.setText(String.valueOf(cond));
             if (cond > 49) {
-                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipKira));
-                condView.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                condView.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetShipKira));
+                condView.setTextColor(ContextCompat.getColor(this,R.color.colorPrimaryDark));
             } else if (cond >= 40) {
-                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoBtn));
-                condView.setTextColor(getResources().getColor(R.color.white));
+                condView.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoBtn));
+                condView.setTextColor(ContextCompat.getColor(this,R.color.white));
             } else if (cond >= 30) {
-                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoBtn));
-                condView.setTextColor(getResources().getColor(R.color.colorFleetShipFatigue1));
+                condView.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoBtn));
+                condView.setTextColor(ContextCompat.getColor(this,R.color.colorFleetShipFatigue1));
             } else if (cond >= 20) {
-                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipFatigue1));
-                condView.setTextColor(getResources().getColor(R.color.white));
+                condView.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetShipFatigue1));
+                condView.setTextColor(ContextCompat.getColor(this,R.color.white));
             } else {
-                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipFatigue2));
-                condView.setTextColor(getResources().getColor(R.color.white));
+                condView.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetShipFatigue2));
+                condView.setTextColor(ContextCompat.getColor(this,R.color.white));
             }
 
             // Equipment icons in compact row (from already-loaded userData)
@@ -879,7 +905,7 @@ public class FleetPanelActivity extends BaseActivity {
 
     private void addEmptySlotRow(LinearLayout container) {
         TextView emptyRow = new TextView(this);
-        emptyRow.setText("　空");
+        emptyRow.setText(getString(R.string.panel_slot_empty));
         emptyRow.setTextSize(9);
         emptyRow.setTextColor(0x80FFFFFF);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -944,7 +970,7 @@ public class FleetPanelActivity extends BaseActivity {
             TextView textView = new TextView(this);
             textView.setText(sb.toString());
             textView.setTextSize(9);
-            textView.setTextColor(getResources().getColor(R.color.white));
+            textView.setTextColor(ContextCompat.getColor(this,R.color.white));
             textView.setMaxLines(1);
             textView.setEllipsize(android.text.TextUtils.TruncateAt.END);
             LinearLayout.LayoutParams textLp = new LinearLayout.LayoutParams(
@@ -1063,7 +1089,7 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Info line background color based on fleet state
         if (idx < 4 && KcaExpedition2.isInExpedition(idx)) {
-            infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoExpedition));
+            infoLine.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoExpedition));
         } else {
             long moraleTime;
             if (isCombined) {
@@ -1073,9 +1099,9 @@ public class FleetPanelActivity extends BaseActivity {
                 moraleTime = KcaMoraleInfo.getMoraleCompleteTime(idx);
             }
             if (moraleTime > 0) {
-                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+                infoLine.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoNotGoodStatus));
             } else {
-                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNormal));
+                infoLine.setBackgroundColor(ContextCompat.getColor(this,R.color.colorFleetInfoNormal));
             }
         }
 
@@ -1217,11 +1243,11 @@ public class FleetPanelActivity extends BaseActivity {
             // poi-style warning: based on remaining slots (ship < 4 remaining)
             int shipRemaining = maxShip - shipCount;
             if (shipRemaining <= 0) {
-                shipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+                shipTv.setTextColor(ContextCompat.getColor(this,R.color.colorSlotDanger));
             } else if (shipRemaining < 4) {
-                shipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+                shipTv.setTextColor(ContextCompat.getColor(this,R.color.colorSlotWarning));
             } else {
-                shipTv.setTextColor(getResources().getColor(R.color.white));
+                shipTv.setTextColor(ContextCompat.getColor(this,R.color.white));
             }
         }
 
@@ -1231,11 +1257,11 @@ public class FleetPanelActivity extends BaseActivity {
             // poi-style warning: based on remaining slots (equip < 10 remaining)
             int equipRemaining = maxEquip - equipCount;
             if (equipRemaining <= 0) {
-                equipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+                equipTv.setTextColor(ContextCompat.getColor(this,R.color.colorSlotDanger));
             } else if (equipRemaining < 10) {
-                equipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+                equipTv.setTextColor(ContextCompat.getColor(this,R.color.colorSlotWarning));
             } else {
-                equipTv.setTextColor(getResources().getColor(R.color.white));
+                equipTv.setTextColor(ContextCompat.getColor(this,R.color.white));
             }
         }
     }
@@ -1303,9 +1329,9 @@ public class FleetPanelActivity extends BaseActivity {
 
                 // Green tint for main resources still regenerating (below cap)
                 if (i < 4 && value < regenCap) {
-                    tv.setTextColor(getResources().getColor(R.color.colorRegenActive));
+                    tv.setTextColor(ContextCompat.getColor(this,R.color.colorRegenActive));
                 } else {
-                    tv.setTextColor(getResources().getColor(R.color.white));
+                    tv.setTextColor(ContextCompat.getColor(this,R.color.white));
                 }
             }
         }
@@ -1323,7 +1349,7 @@ public class FleetPanelActivity extends BaseActivity {
         if (questList == null || questList.size() == 0) {
             TextView emptyText = new TextView(this);
             emptyText.setText(getString(R.string.panel_no_tracked_quest));
-            emptyText.setTextColor(getResources().getColor(R.color.white));
+            emptyText.setTextColor(ContextCompat.getColor(this,R.color.white));
             emptyText.setTextSize(11);
             emptyText.setPadding(4, 4, 4, 4);
             container.addView(emptyText);
@@ -1353,7 +1379,7 @@ public class FleetPanelActivity extends BaseActivity {
             int catColorId = getIdWithFallback(
                     KcaUtils.format("colorQuestCategory%d", category),
                     "colorQuestCategory0", R.color.class);
-            catBar.setBackgroundColor(getResources().getColor(catColorId));
+            catBar.setBackgroundColor(ContextCompat.getColor(this,catColorId));
 
             // Type badge (using localized quest_label_type strings and colorQuestLabel colors)
             TextView typeBadge = row.findViewById(R.id.quest_track_type_badge);
@@ -1365,7 +1391,7 @@ public class FleetPanelActivity extends BaseActivity {
             int labelColorId = getIdWithFallback(
                     KcaUtils.format("colorQuestLabel%d", labelType > 100 ? 100 : labelType),
                     "colorQuestLabel0", R.color.class);
-            typeBadge.setBackgroundColor(getResources().getColor(labelColorId));
+            typeBadge.setBackgroundColor(ContextCompat.getColor(this,labelColorId));
 
             // Title
             TextView title = row.findViewById(R.id.quest_track_title);
@@ -1526,6 +1552,8 @@ public class FleetPanelActivity extends BaseActivity {
     }
 
     private void refreshFleetData() {
+        // W5: DB queries run on main thread here. Known issue — future refactor to background thread.
+        // W6: Layout inflation in bindCompactFleetData creates views without recycling. Future RecyclerView migration.
         // Restore isReady flag after process death if DB has deckport data
         if (!KcaFleetViewService.isReady) {
             JsonArray deckport = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
@@ -1553,7 +1581,7 @@ public class FleetPanelActivity extends BaseActivity {
         timeScheduler = Executors.newSingleThreadScheduledExecutor();
         timeScheduler.scheduleWithFixedDelay(() -> {
             mHandler.post(() -> {
-                if (fleetContentView != null && fleetDataManager != null) {
+                if (!isDestroyed() && fleetContentView != null && fleetDataManager != null) {
                     fleetDataManager.formatFleetInfoLine(fleetContentView, -2);
                 }
             });
