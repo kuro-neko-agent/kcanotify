@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/section_fleet_compact"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Header: fleet tabs only, no collapse -->
+    <LinearLayout
+        android:id="@+id/section_fleet_compact_header"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:background="@color/colorPrimary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp">
+
+        <!-- Fleet tabs -->
+        <TextView
+            android:id="@+id/compact_tab_1"
+            android:layout_width="22dp"
+            android:layout_height="20dp"
+            android:gravity="center"
+            android:text="1"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:background="@color/colorAccent" />
+
+        <TextView
+            android:id="@+id/compact_tab_2"
+            android:layout_width="22dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="2dp"
+            android:gravity="center"
+            android:text="2"
+            android:textColor="@color/white"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/compact_tab_3"
+            android:layout_width="22dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="2dp"
+            android:gravity="center"
+            android:text="3"
+            android:textColor="@color/white"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/compact_tab_4"
+            android:layout_width="22dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="2dp"
+            android:gravity="center"
+            android:text="4"
+            android:textColor="@color/white"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/compact_tab_combined"
+            android:layout_width="22dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="2dp"
+            android:gravity="center"
+            android:text="@string/fleetview_combined"
+            android:textColor="@color/white"
+            android:textSize="9sp" />
+    </LinearLayout>
+
+    <!-- Content area (always visible) -->
+    <LinearLayout
+        android:id="@+id/section_fleet_compact_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Info line: 制空 312 / 索敵 54.2 / 高速 -->
+        <TextView
+            android:id="@+id/compact_fleet_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorQuestTrackProgress"
+            android:ellipsize="marquee"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="1dp"
+            android:singleLine="true"
+            android:textColor="@color/white"
+            android:textSize="9sp"
+            tools:text="制空 312~368 / 索敵 54.2 / 高速" />
+
+        <!-- Ship list container -->
+        <LinearLayout
+            android:id="@+id/compact_fleet_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </LinearLayout>
+</LinearLayout>

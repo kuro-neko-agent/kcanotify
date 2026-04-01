@@ -877,6 +877,8 @@
     <string name="panel_no_battle_data">전투 데이터 없음</string>
     <string name="panel_no_quest_data">임무 데이터 없음</string>
     <string name="panel_no_tracked_quest">추적 중인 임무 없음</string>
+    <string name="quest_progress_complete">완료</string>
+    <string name="quest_progress_in_progress">수행중</string>
 
     <!-- Phase 8D: Resource labels -->
     <string name="panel_res_fuel">연료 </string>
@@ -889,6 +891,8 @@
     <string name="panel_res_screw">나사 </string>
 
     <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">함선</string>
+    <string name="hq_label_equip">장비</string>
     <string name="panel_equip_coming_soon">준비 중</string>
 
     <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->

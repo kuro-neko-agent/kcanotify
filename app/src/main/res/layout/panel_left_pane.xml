@@ -7,7 +7,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:divider="@drawable/divider_section"
+        android:showDividers="middle"
+        android:dividerPadding="3dp">
 
         <!-- Section 0: HQ Info bar -->
         <include layout="@layout/panel_section_hq_info" />
@@ -15,8 +18,8 @@
         <!-- Section 1: Resource overview -->
         <include layout="@layout/panel_section_resource" />
 
-        <!-- Section 2: Fleet info -->
-        <include layout="@layout/panel_section_fleet" />
+        <!-- Section 2: Fleet info (compact for split-pane) -->
+        <include layout="@layout/panel_section_fleet_compact" />
 
         <!-- Section 3: Quest tracking -->
         <include layout="@layout/panel_section_quest_track" />

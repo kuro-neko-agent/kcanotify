@@ -882,6 +882,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="panel_no_battle_data">無戰鬥資料</string>
     <string name="panel_no_quest_data">無任務資料</string>
     <string name="panel_no_tracked_quest">無追蹤任務</string>
+    <string name="quest_progress_complete">完成</string>
+    <string name="quest_progress_in_progress">進行中</string>
 
     <!-- Phase 8D: Resource labels -->
     <string name="panel_res_fuel">燃料 </string>
@@ -894,6 +896,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="panel_res_screw">螺絲 </string>
 
     <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">艦船</string>
+    <string name="hq_label_equip">裝備</string>
     <string name="panel_equip_coming_soon">即將推出</string>
 
     <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->

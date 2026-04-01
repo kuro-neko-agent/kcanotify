@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@color/colorHqInfoBg"
     android:orientation="vertical"
-    android:padding="6dp">
+    android:padding="3dp">
 
     <!-- Line 1: Lv.XXX Nickname [Rank] -->
     <TextView
@@ -16,7 +16,7 @@
         android:singleLine="true"
         android:text=""
         android:textColor="@color/white"
-        android:textSize="12sp"
+        android:textSize="10sp"
         android:textStyle="bold" />
 
     <!-- Line 2: Ship count / max   Equip count / max -->
@@ -24,30 +24,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="2dp">
+        android:layout_marginTop="1dp">
 
         <TextView
             android:id="@+id/hq_info_ship_count"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:drawablePadding="3dp"
             android:gravity="center_vertical"
             android:singleLine="true"
             android:text=""
             android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
         <TextView
             android:id="@+id/hq_info_equip_count"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:drawablePadding="3dp"
             android:gravity="center_vertical"
             android:singleLine="true"
             android:text=""
             android:textColor="@color/white"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
     </LinearLayout>
 </LinearLayout>
