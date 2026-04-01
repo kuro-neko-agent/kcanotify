@@ -847,4 +847,69 @@
     <string name="mitm_addon_new_version">El kcanotify mitm addon debe actualizarse</string>
     <string name="mitm_doze_notice">La optimización de la batería puede interferir con el mitm addon</string>
 
+    <string name="setting_menu_view_title_display_mode">Modo de visualización</string>
+    <string name="setting_menu_view_desc_display_mode">Elija cómo se muestra la información de flota</string>
+    <string name="display_mode_overlay">Superposición</string>
+    <string name="display_mode_split">Pantalla dividida</string>
+    <string name="setting_menu_view_title_auto_launch">Inicio Automático del Panel</string>
+    <string name="setting_menu_view_desc_auto_launch">Abrir automáticamente el panel de flota cuando se reciban datos (solo en modo de pantalla dividida)</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">Solo disponible en modo de pantalla dividida</string>
+
+    <!-- Phase 8D: Split pane settings -->
+    <string name="settings_split_pane_enabled">Modo de Panel Dividido</string>
+    <string name="settings_split_pane_enabled_summary">Mostrar panel de información a la izquierda y pestañas de detalle a la derecha</string>
+    <string name="settings_auto_tab_switch">Cambio Automático de Pestaña</string>
+    <string name="settings_auto_tab_switch_summary">Cambiar pestañas automáticamente según la API del juego</string>
+    <string name="settings_auto_tab_battle">Cambiar a pestaña de batalla al salir</string>
+    <string name="settings_auto_tab_quest">Cambiar a pestaña de misiones al ver lista</string>
+    <string name="settings_resizable_pane">Divisor de panel redimensionable</string>
+    <string name="settings_resizable_pane_summary">Arrastra el divisor para cambiar el tamaño de los paneles</string>
+
+    <!-- Phase 8D: Tab titles -->
+    <string name="panel_tab_battle">Batalla</string>
+    <string name="panel_tab_quest">Misión</string>
+    <string name="panel_tab_equip">Equipo</string>
+    <string name="panel_tab_menu">Menú</string>
+
+    <!-- Phase 8D: Left pane section titles -->
+    <string name="panel_section_resource">Recursos</string>
+    <string name="panel_section_fleet">Flota</string>
+    <string name="panel_section_quest_track">Seguimiento</string>
+
+    <!-- Phase 8D: Empty states -->
+    <string name="panel_no_battle_data">Sin datos de batalla</string>
+    <string name="panel_no_quest_data">Sin datos de misión</string>
+    <string name="panel_no_tracked_quest">Sin misiones rastreadas</string>
+    <string name="quest_progress_complete">Completo</string>
+    <string name="quest_progress_in_progress">En progreso</string>
+
+    <!-- Phase 8D: Resource labels -->
+    <string name="panel_res_fuel">Comb</string>
+    <string name="panel_res_ammo">Mun</string>
+    <string name="panel_res_steel">Acero</string>
+    <string name="panel_res_baux">Baux</string>
+    <string name="panel_res_build">Constr</string>
+    <string name="panel_res_repair">Repar</string>
+    <string name="panel_res_dev">Desar</string>
+    <string name="panel_res_screw">Torn</string>
+
+    <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">Naves</string>
+    <string name="hq_label_equip">Equipo</string>
+    <string name="panel_equip_coming_soon">Próximamente</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">Mariscal</string>
+    <string name="hq_rank_2">Almirante</string>
+    <string name="hq_rank_3">Vicealmirante</string>
+    <string name="hq_rank_4">Contraalmirante</string>
+    <string name="hq_rank_5">Capitán</string>
+    <string name="hq_rank_6">Comandante</string>
+    <string name="hq_rank_7">Tte. Comandante</string>
+    <string name="hq_rank_8">Teniente</string>
+    <string name="hq_rank_9">Subteniente</string>
+    <string name="hq_rank_10">Alférez</string>
+    <string name="panel_waiting_battle">Esperando batalla</string>
+    <string name="panel_waiting_quest">Esperando misión</string>
+    <string name="panel_slot_empty">\u3000Vacío</string>
 </resources>

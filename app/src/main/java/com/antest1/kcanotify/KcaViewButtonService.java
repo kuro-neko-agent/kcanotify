@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
@@ -53,13 +54,20 @@ import static com.antest1.kcanotify.KcaConstants.KCA_MSG_BATTLE_NODE;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_BATTLE_VIEW_REFRESH;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_DATA;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_COMPLETE;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_AUTO_LAUNCH;
+import static com.antest1.kcanotify.KcaConstants.PREF_PANEL_PENDING_REOPEN;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_ICON;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_NOTI_LONGCLICK;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_OPACITY;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_RANDOM;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_REV;
 import static com.antest1.kcanotify.KcaConstants.PREF_FAIRY_SIZE;
+import static com.antest1.kcanotify.KcaConstants.DISPLAY_MODE_SPLIT;
+import static com.antest1.kcanotify.KcaConstants.PREF_DISPLAY_MODE;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_BATTLE_FRAGMENT;
+import static com.antest1.kcanotify.KcaConstants.BROADCAST_SHOW_QUEST_FRAGMENT;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_BATTLEVIEW_USE;
+import static com.antest1.kcanotify.KcaConstants.PREF_SPLIT_PANE_ENABLED;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_NOTI_QUEST_FAIRY_GLOW;
 import static com.antest1.kcanotify.KcaUtils.doVibrate;
 import static com.antest1.kcanotify.KcaUtils.getBooleanPreferences;
@@ -88,6 +96,15 @@ public class KcaViewButtonService extends BaseService {
     public static final String DEACTIVATE_BATTLEVIEW_ACTION = "deactivate_battleview";
     public static final String ACTIVATE_QUESTVIEW_ACTION = "activate_questview";
     public static final String DEACTIVATE_QUESTVIEW_ACTION = "deactivate_questview";
+    public static final String AUTO_LAUNCH_PANEL_ACTION = "auto_launch_panel";
+
+    /** Delay before reopening FleetPanelActivity after battle/quest ends.
+     *  DEACTIVATE_BATTLEVIEW_ACTION and stopService(KcaBattleViewService) are sent nearly simultaneously.
+     *  BattleViewService.onDestroy() needs to remove overlay views from WindowManager.
+     *  WindowManager.removeView() itself takes ~16ms (one frame), but Service stop scheduling + GC
+     *  need extra time. 300ms provides sufficient margin, covering low-end device scenarios.
+     */
+    private static final long PANEL_REOPEN_DELAY_MS = 300L;
 
     private LocalBroadcastManager broadcaster;
     private BroadcastReceiver battleinfo_receiver;
@@ -345,20 +362,46 @@ public class KcaViewButtonService extends BaseService {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
+                if (isSplitScreenMode() && isSplitPaneEnabled()) {
+                    // Split-pane mode: route to BattleFragment instead of closing panel
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(BROADCAST_SHOW_BATTLE_FRAGMENT));
+                } else if (isSplitScreenMode()) {
+                    // Split-screen but no split pane: close panel as before
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                }
                 battleviewEnabled = true;
             }
             if (intent.getAction().equals(DEACTIVATE_BATTLEVIEW_ACTION)) {
                 taiha_status = false;
                 battleviewEnabled = false;
+                reopenFleetPanelIfNeeded();
             }
             if (intent.getAction().equals(ACTIVATE_QUESTVIEW_ACTION)) {
                 Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                 qintent.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
                 startService(qintent);
+                if (isSplitScreenMode() && isSplitPaneEnabled()) {
+                    // Split-pane mode: switch to Quest tab instead of closing panel
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(BROADCAST_SHOW_QUEST_FRAGMENT));
+                } else if (isSplitScreenMode()) {
+                    LocalBroadcastManager.getInstance(getBaseContext())
+                            .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                }
                 questviewEnabled = true;
             }
             if (intent.getAction().equals(DEACTIVATE_QUESTVIEW_ACTION)) {
                 questviewEnabled = false;
+                reopenFleetPanelIfNeeded();
+            }
+            if (intent.getAction().equals(AUTO_LAUNCH_PANEL_ACTION)) {
+                // Auto-launch: only when battle/quest views are not active
+                // (their reopen is handled by reopenFleetPanelIfNeeded)
+                if (!battleviewEnabled && !questviewEnabled) {
+                    launchFleetPanelActivity(null);
+                }
             }
 
         }
@@ -452,6 +495,7 @@ public class KcaViewButtonService extends BaseService {
 
     @Override
     public void onDestroy() {
+        if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battleinfo_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlenode_receiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(battlehdmg_receiver);
@@ -562,6 +606,60 @@ public class KcaViewButtonService extends BaseService {
         }
     };
 
+    private boolean isSplitScreenMode() {
+        return DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE));
+    }
+
+    private boolean isSplitPaneEnabled() {
+        return getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+    }
+
+    /**
+     * Launch FleetPanelActivity in split-screen mode.
+     * Shared by Task 2 (battle/quest end reopen) and Task 7 (auto-launch).
+     *
+     * @param extras optional Intent extras (e.g., for restoring fleet index)
+     */
+    private void launchFleetPanelActivity(@Nullable Bundle extras) {
+        if (!isSplitScreenMode()) return;
+
+        // Skip if panel is already open to avoid unnecessary startActivity calls
+        if (FleetPanelActivity.isFleetPanelOpen) return;
+
+        Intent intent = new Intent(getBaseContext(), FleetPanelActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (extras != null) {
+            intent.putExtras(extras);
+        }
+        startActivity(intent);
+    }
+
+    /**
+     * Reopen FleetPanelActivity after battle or quest screen ends,
+     * if panel was previously force-closed.
+     * Also reopens unconditionally when auto-launch mode is enabled.
+     */
+    private void reopenFleetPanelIfNeeded() {
+        if (!isSplitScreenMode()) return;
+
+        SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+        boolean pendingReopen = prefs.getBoolean(PREF_PANEL_PENDING_REOPEN, false);
+        boolean autoLaunch = prefs.getBoolean(PREF_PANEL_AUTO_LAUNCH, false);
+
+        if (pendingReopen || autoLaunch) {
+            // Clear pending flag
+            prefs.edit().putBoolean(PREF_PANEL_PENDING_REOPEN, false).apply();
+
+            mHandler.postDelayed(() -> {
+                // Re-check: state may have changed during delay (e.g., user quickly re-sortied)
+                if (isSplitScreenMode() && !battleviewEnabled && !questviewEnabled) {
+                    launchFleetPanelActivity(null);
+                }
+            }, PANEL_REOPEN_DELAY_MS);
+        }
+    }
+
     private final View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -575,7 +673,13 @@ public class KcaViewButtonService extends BaseService {
                     Intent qintent = new Intent(getBaseContext(), KcaQuestViewService.class);
                     qintent.setAction(KcaQuestViewService.SHOW_QUESTVIEW_ACTION_NEW);
                     startService(qintent);
+                } else if (isSplitScreenMode()) {
+                    // Split-screen mode: launch FleetPanelActivity (Q1: fairy stays visible, tap opens panel)
+                    Intent activityIntent = new Intent(getBaseContext(), FleetPanelActivity.class);
+                    activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(activityIntent);
                 } else {
+                    // Overlay mode (default)
                     Intent qintent = new Intent(getBaseContext(), KcaFleetViewService.class);
                     qintent.setAction(KcaFleetViewService.SHOW_FLEETVIEW_ACTION);
                     startService(qintent);

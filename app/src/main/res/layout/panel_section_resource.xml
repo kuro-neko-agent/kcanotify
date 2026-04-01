@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resource grid — column count set dynamically in Java based on pane width -->
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/section_resource_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="2"
+    android:padding="2dp">
+
+    <!-- 8 resource cells: each is icon + number. Column count adjusted at runtime. -->
+
+    <LinearLayout android:id="@+id/res_cell_fuel"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_fuel"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_fuel"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_ammo"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_ammo"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_ammo"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_steel"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_steel"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_steel"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_bauxite"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_bauxite"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_bauxite"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_instant_repair"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_repair"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_instant_repair"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_instant_build"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_instant_build"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_instant_build"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_dev_material"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_dev_material"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_dev_material"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/res_cell_screw"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:gravity="center_vertical"
+        android:orientation="horizontal" android:paddingHorizontal="2dp">
+        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+            android:layout_marginEnd="2dp" android:src="@drawable/ic_material_screw"
+            android:importantForAccessibility="no" />
+        <TextView android:id="@+id/res_screw"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:gravity="end" android:text="0"
+            android:textColor="@color/white" android:textSize="10sp" android:fontFamily="monospace" />
+    </LinearLayout>
+</GridLayout>

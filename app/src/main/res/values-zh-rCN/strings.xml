@@ -849,4 +849,70 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="mitm_addon_update_available">有新的 mitm 插件更新可用。</string>
     <string name="mitm_addon_new_version">必须更新 kcanotify mitm 插件</string>
     <string name="mitm_doze_notice">电池优化可能会干扰 mitm 插件</string>
+
+    <string name="setting_menu_view_title_display_mode">显示模式</string>
+    <string name="setting_menu_view_desc_display_mode">选择舰队信息的显示方式</string>
+    <string name="display_mode_overlay">悬浮窗</string>
+    <string name="display_mode_split">分屏</string>
+    <string name="setting_menu_view_title_auto_launch">自动启动面板</string>
+    <string name="setting_menu_view_desc_auto_launch">收到数据时自动打开舰队面板（仅分屏模式）</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">仅在分屏显示模式下可用</string>
+
+    <!-- Phase 8D: Split pane settings -->
+    <string name="settings_split_pane_enabled">分割面板模式</string>
+    <string name="settings_split_pane_enabled_summary">左侧显示信息面板，右侧显示详细标签</string>
+    <string name="settings_auto_tab_switch">自动切换标签</string>
+    <string name="settings_auto_tab_switch_summary">根据游戏API自动切换标签</string>
+    <string name="settings_auto_tab_battle">出击时切换到战斗标签</string>
+    <string name="settings_auto_tab_quest">查看任务列表时切换到任务标签</string>
+    <string name="settings_resizable_pane">可拖拽面板分割线</string>
+    <string name="settings_resizable_pane_summary">拖动分割线调整左右面板宽度</string>
+
+    <!-- Phase 8D: Tab titles -->
+    <string name="panel_tab_battle">战斗</string>
+    <string name="panel_tab_quest">任务</string>
+    <string name="panel_tab_equip">装备</string>
+    <string name="panel_tab_menu">菜单</string>
+
+    <!-- Phase 8D: Left pane section titles -->
+    <string name="panel_section_resource">资源</string>
+    <string name="panel_section_fleet">舰队</string>
+    <string name="panel_section_quest_track">任务追踪</string>
+
+    <!-- Phase 8D: Empty states -->
+    <string name="panel_no_battle_data">无战斗数据</string>
+    <string name="panel_no_quest_data">无任务数据</string>
+    <string name="panel_no_tracked_quest">无追踪任务</string>
+    <string name="quest_progress_complete">完成</string>
+    <string name="quest_progress_in_progress">进行中</string>
+
+    <!-- Phase 8D: Resource labels -->
+    <string name="panel_res_fuel">燃料</string>
+    <string name="panel_res_ammo">弹药</string>
+    <string name="panel_res_steel">钢材</string>
+    <string name="panel_res_baux">铝土</string>
+    <string name="panel_res_build">建造</string>
+    <string name="panel_res_repair">修复</string>
+    <string name="panel_res_dev">开发</string>
+    <string name="panel_res_screw">螺丝</string>
+
+    <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">舰船</string>
+    <string name="hq_label_equip">装备</string>
+    <string name="panel_equip_coming_soon">即将推出</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">元帅</string>
+    <string name="hq_rank_2">大将</string>
+    <string name="hq_rank_3">中将</string>
+    <string name="hq_rank_4">少将</string>
+    <string name="hq_rank_5">大佐</string>
+    <string name="hq_rank_6">中佐</string>
+    <string name="hq_rank_7">少佐</string>
+    <string name="hq_rank_8">大尉</string>
+    <string name="hq_rank_9">中尉</string>
+    <string name="hq_rank_10">少尉</string>
+    <string name="panel_waiting_battle">等待战斗</string>
+    <string name="panel_waiting_quest">等待任务</string>
+    <string name="panel_slot_empty">\u3000空</string>
 </resources>

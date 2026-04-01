@@ -843,4 +843,70 @@
     <string name="mitm_addon_update_available">新しいmitm addonアップデートをインストールできます。</string>
     <string name="mitm_addon_new_version">mitm addonのアップデートが必要です。</string>
     <string name="mitm_doze_notice">バッテリー最適化機能がmitm addonに干渉する可能性があります。</string>
+
+    <string name="setting_menu_view_title_display_mode">表示モード</string>
+    <string name="setting_menu_view_desc_display_mode">艦隊情報の表示方法を選択</string>
+    <string name="display_mode_overlay">オーバーレイ</string>
+    <string name="display_mode_split">分割画面</string>
+    <string name="setting_menu_view_title_auto_launch">パネル自動起動</string>
+    <string name="setting_menu_view_desc_auto_launch">データ受信時に自動的に艦隊パネルを開く（分割画面モードのみ）</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">分割画面モードでのみ利用可能</string>
+
+    <!-- Phase 8D: Split pane settings -->
+    <string name="settings_split_pane_enabled">分割パネルモード</string>
+    <string name="settings_split_pane_enabled_summary">左側に情報パネル、右側に詳細タブを表示</string>
+    <string name="settings_auto_tab_switch">自動タブ切替</string>
+    <string name="settings_auto_tab_switch_summary">ゲームAPIに基づいてタブを自動切替</string>
+    <string name="settings_auto_tab_battle">出撃時に戦闘タブに切替</string>
+    <string name="settings_auto_tab_quest">任務一覧時に任務タブに切替</string>
+    <string name="settings_resizable_pane">パネル幅のドラッグ調整</string>
+    <string name="settings_resizable_pane_summary">分割線をドラッグして左右パネルの幅を調整</string>
+
+    <!-- Phase 8D: Tab titles -->
+    <string name="panel_tab_battle">戦闘</string>
+    <string name="panel_tab_quest">任務</string>
+    <string name="panel_tab_equip">装備</string>
+    <string name="panel_tab_menu">メニュー</string>
+
+    <!-- Phase 8D: Left pane section titles -->
+    <string name="panel_section_resource">資源</string>
+    <string name="panel_section_fleet">艦隊</string>
+    <string name="panel_section_quest_track">任務追跡</string>
+
+    <!-- Phase 8D: Empty states -->
+    <string name="panel_no_battle_data">戦闘データなし</string>
+    <string name="panel_no_quest_data">任務データなし</string>
+    <string name="panel_no_tracked_quest">追跡中の任務なし</string>
+    <string name="quest_progress_complete">完了</string>
+    <string name="quest_progress_in_progress">遂行中</string>
+
+    <!-- Phase 8D: Resource labels -->
+    <string name="panel_res_fuel">燃料</string>
+    <string name="panel_res_ammo">弾薬</string>
+    <string name="panel_res_steel">鋼材</string>
+    <string name="panel_res_baux">ボーキ</string>
+    <string name="panel_res_build">建造</string>
+    <string name="panel_res_repair">修復</string>
+    <string name="panel_res_dev">開発</string>
+    <string name="panel_res_screw">ネジ</string>
+
+    <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">艦船</string>
+    <string name="hq_label_equip">装備</string>
+    <string name="panel_equip_coming_soon">準備中</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">元帥</string>
+    <string name="hq_rank_2">大将</string>
+    <string name="hq_rank_3">中将</string>
+    <string name="hq_rank_4">少将</string>
+    <string name="hq_rank_5">大佐</string>
+    <string name="hq_rank_6">中佐</string>
+    <string name="hq_rank_7">少佐</string>
+    <string name="hq_rank_8">大尉</string>
+    <string name="hq_rank_9">中尉</string>
+    <string name="hq_rank_10">少尉</string>
+    <string name="panel_waiting_battle">戦闘待機中</string>
+    <string name="panel_waiting_quest">任務待機中</string>
+    <string name="panel_slot_empty">\u3000空</string>
 </resources>

@@ -238,6 +238,7 @@ public class KcaFleetViewListItem extends FrameLayout {
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
+        if (info == null) return superState;
 
         return new SavedState(superState, info, isAkashiActive);
     }
@@ -356,7 +357,11 @@ public class KcaFleetViewListItem extends FrameLayout {
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
 
-            info.writeToParcel(out, flags);
+            if (info != null) {
+                info.writeToParcel(out, flags);
+            } else {
+                new ShipInfo(-1, -1, "", 0, 0, 0, 0, 0, 0, 0).writeToParcel(out, flags);
+            }
             out.writeInt(isAkashiActive ? 1 : 0); // to avoid using read/writeBoolean
         }
 

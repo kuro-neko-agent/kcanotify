@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Main row (26dp) -->
+    <LinearLayout
+        android:id="@+id/compact_main_row"
+        android:layout_width="match_parent"
+        android:layout_height="26dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp">
+
+        <!-- Ship name + "Lv175" combined -->
+        <TextView
+            android:id="@+id/compact_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/white"
+            android:textSize="9sp"
+            tools:text="Верный Lv175" />
+
+        <!-- Equipment icons container -->
+        <LinearLayout
+            android:id="@+id/compact_equip_icons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
+
+        <!-- HP fraction "35/37" -->
+        <TextView
+            android:id="@+id/compact_hp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:textColor="@android:color/white"
+            android:textSize="9sp"
+            tools:text="35/37" />
+
+        <!-- HP progress bar (thin) -->
+        <ProgressBar
+            android:id="@+id/compact_hp_bar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="36dp"
+            android:layout_height="3dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="2dp"
+            android:max="100" />
+
+        <!-- Cond badge -->
+        <TextView
+            android:id="@+id/compact_cond"
+            android:layout_width="20dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="3dp"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="9sp"
+            tools:text="49" />
+
+        <!-- Expand chevron -->
+        <TextView
+            android:id="@+id/compact_expand_icon"
+            android:layout_width="12dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="▸"
+            android:textColor="@color/white"
+            android:textSize="9sp" />
+    </LinearLayout>
+
+    <!-- Expandable detail section (initially GONE) -->
+    <LinearLayout
+        android:id="@+id/compact_equip_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorOverlaySubtle"
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:visibility="gone" />
+</LinearLayout>

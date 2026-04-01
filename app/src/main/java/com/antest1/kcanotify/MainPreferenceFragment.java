@@ -36,6 +36,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -110,8 +112,14 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         sharedPref = context.getSharedPreferences("pref", Context.MODE_PRIVATE);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
 
-        Activity activity = getActivity();
-        if (activity instanceof Callback) mCallback = (Callback) activity;
+        // Check parent fragment first (for embedded use in SettingsFragment),
+        // then fall back to activity (for standalone SettingActivity)
+        if (getParentFragment() instanceof Callback) {
+            mCallback = (Callback) getParentFragment();
+        } else {
+            Activity activity = getActivity();
+            if (activity instanceof Callback) mCallback = (Callback) activity;
+        }
 
         createNotificationChannel(context);
 
@@ -161,8 +169,13 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         super.onViewCreated(view, savedInstanceState);
         isActivitySet = true;
 
-        ((AppCompatActivity) getActivity()).getSupportActionBar()
-                .setTitle(getString(R.string.action_settings));
+        if (getActivity() instanceof AppCompatActivity) {
+            androidx.appcompat.app.ActionBar actionBar =
+                    ((AppCompatActivity) getActivity()).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(getString(R.string.action_settings));
+            }
+        }
 
         Map<String, ?> allEntries = sharedPref.getAll();
 
@@ -201,6 +214,7 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
         setActiveSnifferSettingEnabled(KC_PACKAGE_NAME.equals(kca_package) || sniffer_mode == SNIFFER_ACTIVE);
 
         setSettingDisabledWhenServiceRunning();
+        updateAutoLaunchAvailability();
     }
 
     @Override
@@ -266,9 +280,11 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
     }
 
     public void showObtainingPermissionOverlayWindow() {
-        String package_name = getContext().getPackageName();
+        Context ctx = getContext();
+        if (ctx == null) return;
+        String package_name = ctx.getPackageName();
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + package_name));
-        if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+        if (intent.resolveActivity(ctx.getPackageManager()) == null) {
             intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + package_name));
             showToast(getActivity(), getString(R.string.sa_overlay_appearontop), Toast.LENGTH_LONG);
         }
@@ -278,10 +294,12 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
 
     @TargetApi(Build.VERSION_CODES.M)
     public void showObtainingPermissionBatteryOptimization() {
-        String package_name = getContext().getPackageName();
+        Context ctx = getContext();
+        if (ctx == null) return;
+        String package_name = ctx.getPackageName();
         Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
 
-        if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+        if (intent.resolveActivity(ctx.getPackageManager()) == null) {
             intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + package_name));
             showToast(getActivity(), getString(R.string.sa_batteryoptim_appearontop), Toast.LENGTH_LONG);
         }
@@ -411,6 +429,18 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
                 case PREF_FAIRY_SIZE:
                     kca_url = KCA_API_PREF_FAIRYSIZE_CHANGED;
                     break;
+                case PREF_DISPLAY_MODE:
+                    // Close any existing fleet views when mode changes
+                    Context dmCtx = getContext();
+                    if (dmCtx != null) {
+                        Intent closeOverlay = new Intent(dmCtx, KcaFleetViewService.class);
+                        closeOverlay.setAction(KcaFleetViewService.CLOSE_FLEETVIEW_ACTION);
+                        dmCtx.startService(closeOverlay);
+                        LocalBroadcastManager.getInstance(dmCtx)
+                                .sendBroadcast(new Intent(FleetPanelActivity.CLOSE_FLEET_PANEL_ACTION));
+                    }
+                    updateAutoLaunchAvailability();
+                    break;
                 case PREF_FAIRY_OPACITY:
                     kca_url = KCA_API_PREF_FAIRYALPHA_CHANGED;
                     break;
@@ -445,6 +475,31 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
 
         if (PREF_KCA_NOTI_SOUND_KIND.equals(key)) {
             callbackAlertRingtoneResult(null);
+        }
+    }
+
+    /**
+     * Update auto_launch preference enabled state and summary based on current display mode.
+     * Uses setEnabled() + summary update (not setVisible) for better discoverability.
+     * Non-split mode: greyed out with "only available in split-screen" hint.
+     */
+    private void updateAutoLaunchAvailability() {
+        Context ctx = getContext();
+        if (ctx == null) return;
+        CheckBoxPreference autoLaunchPref =
+                (CheckBoxPreference) findPreference(PREF_PANEL_AUTO_LAUNCH);
+        if (autoLaunchPref != null) {
+            String displayMode = getStringPreferences(ctx, PREF_DISPLAY_MODE);
+            boolean isSplit = DISPLAY_MODE_SPLIT.equals(displayMode);
+            autoLaunchPref.setEnabled(isSplit);
+            if (!isSplit) {
+                autoLaunchPref.setSummary(R.string.setting_menu_view_desc_auto_launch_disabled);
+                if (autoLaunchPref.isChecked()) {
+                    autoLaunchPref.setChecked(false);
+                }
+            } else {
+                autoLaunchPref.setSummary(R.string.setting_menu_view_desc_auto_launch);
+            }
         }
     }
 
@@ -738,6 +793,8 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
     }
 
     private void makeTestNotification() {
+        Context ctx = getContext();
+        if (ctx == null) return;
         try {
             notificationManager.cancel(TEST_NOTI_ID);
 
@@ -746,20 +803,20 @@ public class MainPreferenceFragment extends PreferenceFragmentCompat implements
             String content = sdf.format(new Date());
 
             Bitmap testBitmap = KcaUtils.decodeSampledBitmapFromResource(getResources(), R.mipmap.expedition_notify_bigicon, 128, 128);
-            NotificationCompat.Builder builder = createBuilder(getContext(), notification_id)
+            NotificationCompat.Builder builder = createBuilder(ctx, notification_id)
                     .setSmallIcon(R.mipmap.expedition_notify_icon)
                     .setLargeIcon(testBitmap)
                     .setContentTitle(title)
                     .setContentText(content)
                     .setAutoCancel(false)
                     .setTicker(title);
-            builder = setSoundSetting(getContext(), mAudioManager, builder);
+            builder = setSoundSetting(ctx, mAudioManager, builder);
             Notification noti = builder.build();
             noti.flags = Notification.FLAG_AUTO_CANCEL;
             notificationManager.notify(TEST_NOTI_ID, noti);
 
         } catch (Exception e) {
-            Toast.makeText(getContext(), "something went wrong: check error log", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ctx, "something went wrong: check error log", Toast.LENGTH_SHORT).show();
             dbHelper.recordErrorLog(ERROR_TYPE_SETTING, "noti_test_show", "", "", getStringFromException(e));
         }
     }

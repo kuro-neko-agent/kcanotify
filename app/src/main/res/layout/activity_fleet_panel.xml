@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fleet_panel_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark">
+
+    <!-- 启用左右分屏时使用可拖拽分割布局 -->
+    <LinearLayout
+        android:id="@+id/split_pane_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <!-- 左面板: 资源+舰队+任务概览 -->
+        <FrameLayout
+            android:id="@+id/left_pane"
+            android:layout_width="280dp"
+            android:layout_height="match_parent" />
+
+        <!-- 可拖拽分割线 -->
+        <View
+            android:id="@+id/pane_divider"
+            android:layout_width="8dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorDividerLight" />
+
+        <!-- 右面板: ViewPager2+TabLayout -->
+        <FrameLayout
+            android:id="@+id/right_pane"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <!-- 禁用左右分屏时的传统单面板容器 -->
+    <FrameLayout
+        android:id="@+id/single_pane_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</FrameLayout>

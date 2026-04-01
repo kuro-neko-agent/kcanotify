@@ -843,4 +843,70 @@
     <string name="mitm_addon_update_available">새로운 mitm addon 업데이트를 설치할 수 있습니다.</string>
     <string name="mitm_addon_new_version">mitm addon의 업데이트가 필요합니다.</string>
     <string name="mitm_doze_notice">배터리 최적화 기능이 mitm addon과 충돌할 수 있습니다.</string>
+
+    <string name="setting_menu_view_title_display_mode">표시 모드</string>
+    <string name="setting_menu_view_desc_display_mode">함대 정보 표시 방식 선택</string>
+    <string name="display_mode_overlay">오버레이</string>
+    <string name="display_mode_split">분할 화면</string>
+    <string name="setting_menu_view_title_auto_launch">패널 자동 실행</string>
+    <string name="setting_menu_view_desc_auto_launch">데이터 수신 시 자동으로 함대 패널 열기 (분할 화면 모드 전용)</string>
+    <string name="setting_menu_view_desc_auto_launch_disabled">분할 화면 모드에서만 사용 가능</string>
+
+    <!-- Phase 8D: Split pane settings -->
+    <string name="settings_split_pane_enabled">분할 패널 모드</string>
+    <string name="settings_split_pane_enabled_summary">왼쪽에 정보 패널, 오른쪽에 상세 탭 표시</string>
+    <string name="settings_auto_tab_switch">자동 탭 전환</string>
+    <string name="settings_auto_tab_switch_summary">게임 API에 따라 탭 자동 전환</string>
+    <string name="settings_auto_tab_battle">출격 시 전투 탭으로 전환</string>
+    <string name="settings_auto_tab_quest">임무 목록 시 임무 탭으로 전환</string>
+    <string name="settings_resizable_pane">패널 크기 드래그 조절</string>
+    <string name="settings_resizable_pane_summary">분할선을 드래그하여 좌우 패널 크기 조절</string>
+
+    <!-- Phase 8D: Tab titles -->
+    <string name="panel_tab_battle">전투</string>
+    <string name="panel_tab_quest">임무</string>
+    <string name="panel_tab_equip">장비</string>
+    <string name="panel_tab_menu">메뉴</string>
+
+    <!-- Phase 8D: Left pane section titles -->
+    <string name="panel_section_resource">자원</string>
+    <string name="panel_section_fleet">함대</string>
+    <string name="panel_section_quest_track">임무 추적</string>
+
+    <!-- Phase 8D: Empty states -->
+    <string name="panel_no_battle_data">전투 데이터 없음</string>
+    <string name="panel_no_quest_data">임무 데이터 없음</string>
+    <string name="panel_no_tracked_quest">추적 중인 임무 없음</string>
+    <string name="quest_progress_complete">완료</string>
+    <string name="quest_progress_in_progress">수행중</string>
+
+    <!-- Phase 8D: Resource labels -->
+    <string name="panel_res_fuel">연료</string>
+    <string name="panel_res_ammo">탄약</string>
+    <string name="panel_res_steel">강재</string>
+    <string name="panel_res_baux">보크</string>
+    <string name="panel_res_build">건조</string>
+    <string name="panel_res_repair">수리</string>
+    <string name="panel_res_dev">개발</string>
+    <string name="panel_res_screw">나사</string>
+
+    <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">함선</string>
+    <string name="hq_label_equip">장비</string>
+    <string name="panel_equip_coming_soon">준비 중</string>
+
+    <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->
+    <string name="hq_rank_1">원수</string>
+    <string name="hq_rank_2">대장</string>
+    <string name="hq_rank_3">중장</string>
+    <string name="hq_rank_4">소장</string>
+    <string name="hq_rank_5">대좌</string>
+    <string name="hq_rank_6">중좌</string>
+    <string name="hq_rank_7">소좌</string>
+    <string name="hq_rank_8">대위</string>
+    <string name="hq_rank_9">중위</string>
+    <string name="hq_rank_10">소위</string>
+    <string name="panel_waiting_battle">전투 대기중</string>
+    <string name="panel_waiting_quest">임무 대기중</string>
+    <string name="panel_slot_empty">\u3000빈칸</string>
 </resources>

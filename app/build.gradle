@@ -59,6 +59,7 @@ dependencies {
     implementation "androidx.preference:preference:1.2.1"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'androidx.slidingpanelayout:slidingpanelayout:1.2.0'
     implementation 'com.google.android.material:material:1.9.0'
     api 'com.google.guava:guava:31.1-android'
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
@@ -84,6 +85,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics:22.2.0'
     implementation 'com.google.firebase:firebase-crashlytics:19.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.10.3'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
 
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {

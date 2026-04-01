@@ -36,10 +36,21 @@ public class KcaQuestListAdpater extends BaseAdapter {
     public static final float PROGRESS_1 = 0.5f;
     public static final float PROGRESS_2 = 0.8f;
 
+    private QuestDataManager.QuestPopupCallback popupCallback;
+
     public KcaQuestListAdpater(KcaQuestViewService svc, KcaQuestTracker qt) {
         service = svc;
         context = svc.getBaseContext();
         questTracker = qt;
+    }
+
+    /** Constructor for Fragment-based usage (split-screen mode). */
+    public KcaQuestListAdpater(Context ctx, KcaQuestTracker qt,
+                               QuestDataManager.QuestPopupCallback callback) {
+        service = null;
+        context = ctx;
+        questTracker = qt;
+        popupCallback = callback;
     }
 
     public String getStringFromResId(int id) {
@@ -135,8 +146,13 @@ public class KcaQuestListAdpater extends BaseAdapter {
         questDetailViewData.addProperty("rewards", api_rewards);
         questDetailViewData.add("materials", api_get_material);
 
-        holder.quest_desc_full.setOnClickListener(v1 ->
-                service.setAndShowPopup(questDetailViewData));
+        holder.quest_desc_full.setOnClickListener(v1 -> {
+            if (popupCallback != null) {
+                popupCallback.setAndShowPopup(questDetailViewData);
+            } else if (service != null) {
+                service.setAndShowPopup(questDetailViewData);
+            }
+        });
 
         if (api_progress != 0) {
             holder.quest_progress

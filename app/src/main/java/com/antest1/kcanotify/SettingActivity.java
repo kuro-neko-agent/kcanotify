@@ -81,6 +81,7 @@ public class SettingActivity extends BaseActivity implements MainPreferenceFragm
             case PREF_FAIRY_RANDOM:
             case PREF_VPNSERVICE_USAGE_AGREE:
             case PREF_USE_TLS_DECRYPTION:
+            case PREF_PANEL_AUTO_LAUNCH:
                 return "boolean_false";
             case PREF_KCA_EXP_VIEW:
             case PREF_KCA_NOTI_NOTIFYATSVCOFF:
@@ -113,6 +114,7 @@ public class SettingActivity extends BaseActivity implements MainPreferenceFragm
                 return "|";
             case PREF_SHIPINFO_SORTKEY:
                 return "|1,true|";
+            case PREF_DISPLAY_MODE:
             case PREF_FAIRY_ICON:
             case PREF_KCA_EXP_TYPE:
             case PREF_VIEW_YLOC:

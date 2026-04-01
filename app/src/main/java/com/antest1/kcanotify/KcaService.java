@@ -867,6 +867,9 @@ public class KcaService extends BaseService {
                     currentNodeInfo = KcaApiData.getNodeFullInfo(this, currentNodeAlphabet, api_event_id, api_event_kind, api_color_no, false);
                     showCustomToast(currentNodeInfo, Toast.LENGTH_LONG, getNodeColor(getApplicationContext(), api_event_id, api_event_kind, api_color_no));
                 }
+                if (url.startsWith(API_REQ_MAP_START) && isSplitPaneMode()) {
+                    sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_BATTLE);
+                }
             }
 
             if (url.startsWith(API_GET_MEMBER_SLOT_ITEM)) {
@@ -890,8 +893,10 @@ public class KcaService extends BaseService {
                 startService(new Intent(this, KcaViewButtonService.class)
                         .setAction(KcaViewButtonService.DEACTIVATE_QUESTVIEW_ACTION));
                 KcaQuestViewService.setQuestMode(false);
-                startService(new Intent(this, KcaQuestViewService.class)
-                        .setAction(KcaQuestViewService.CLOSE_QUESTVIEW_ACTION));
+                if (!isSplitPaneMode()) {
+                    startService(new Intent(this, KcaQuestViewService.class)
+                            .setAction(KcaQuestViewService.CLOSE_QUESTVIEW_ACTION));
+                }
                 updateQuestView();
             }
 
@@ -908,12 +913,18 @@ public class KcaService extends BaseService {
                         break;
                     }
                 }
-                if (Settings.canDrawOverlays(getApplicationContext())
-                        && jsonDataObj.has("api_data")) {
+                if (jsonDataObj.has("api_data")) {
                     JsonObject api_data = jsonDataObj.getAsJsonObject("api_data");
                     KcaQuestViewService.setApiData(api_data);
-                    startService(new Intent(getBaseContext(), KcaQuestViewService.class)
-                            .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
+                    if (isSplitPaneMode()) {
+                        // Route to QuestFragment via broadcast
+                        LocalBroadcastManager.getInstance(getBaseContext())
+                                .sendBroadcast(new Intent(KCA_MSG_QUEST_VIEW_LIST));
+                        sendTabSwitchBroadcast(RightPanePagerAdapter.TAB_QUEST);
+                    } else if (Settings.canDrawOverlays(getApplicationContext())) {
+                        startService(new Intent(getBaseContext(), KcaQuestViewService.class)
+                                .setAction(REFRESH_QUESTVIEW_ACTION).putExtra("tab_id", api_tab_id));
+                    }
                 }
                 sendQuestCompletionInfo();
                 return;
@@ -997,6 +1008,7 @@ public class KcaService extends BaseService {
                     }
                     runTimer();
                     updateFleetView();
+                    autoLaunchFleetPanelIfNeeded();
                     isInBattle = false;
                 }
 
@@ -1191,10 +1203,14 @@ public class KcaService extends BaseService {
                             KcaBattle.setDeckPortData(api_data);
                             KcaBattle.setStartHeavyDamageExist(checkvalue);
 
-                            if (isBattleViewEnabled() &&Settings.canDrawOverlays(getApplicationContext())) {
+                            if (isBattleViewEnabled() && Settings.canDrawOverlays(getApplicationContext())) {
                                 startService(new Intent(this, KcaViewButtonService.class)
                                         .setAction(KcaViewButtonService.ACTIVATE_BATTLEVIEW_ACTION));
-                                startService(new Intent(this, KcaBattleViewService.class));
+                                // In split-pane mode, BattleFragment handles display;
+                                // skip starting the overlay service
+                                if (!isSplitPaneMode()) {
+                                    startService(new Intent(this, KcaBattleViewService.class));
+                                }
                             }
                         }
                         KcaBattle.processData(dbHelper, url, battleApiData);
@@ -2419,6 +2435,30 @@ public class KcaService extends BaseService {
         return getBooleanPreferences(getApplicationContext(), PREF_KCA_BATTLEVIEW_USE);
     }
 
+    private boolean isSplitPaneMode() {
+        return DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))
+                && getBooleanPreferences(getApplicationContext(), PREF_SPLIT_PANE_ENABLED);
+    }
+
+    /** Send tab switch broadcast with 2-level toggle check */
+    private void sendTabSwitchBroadcast(int tabIndex) {
+        if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_SWITCH)) return;
+
+        switch (tabIndex) {
+            case RightPanePagerAdapter.TAB_BATTLE:
+                if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_BATTLE)) return;
+                break;
+            case RightPanePagerAdapter.TAB_QUEST:
+                if (!getBooleanPreferences(getApplicationContext(), PREF_AUTO_TAB_QUEST)) return;
+                break;
+        }
+
+        Intent intent = new Intent(BROADCAST_TAB_SWITCH);
+        intent.putExtra(EXTRA_TAB_INDEX, tabIndex);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
     private boolean isBattleNodeEnabled() {
         return getBooleanPreferences(getApplicationContext(), PREF_KCA_BATTLENODE_USE);
     }
@@ -2638,9 +2678,36 @@ public class KcaService extends BaseService {
                 .setAction(REFRESH_QUESTVIEW_ACTION));
     }
 
+    public static final String BROADCAST_REFRESH_FLEETVIEW = "com.antest1.kcanotify.REFRESH_FLEETVIEW";
+
     public void updateFleetView() {
         startService(new Intent(getBaseContext(), KcaFleetViewService.class)
                 .setAction(REFRESH_FLEETVIEW_ACTION));
+        // Also broadcast for FleetPanelActivity (split-screen mode)
+        LocalBroadcastManager.getInstance(getBaseContext())
+                .sendBroadcast(new Intent(BROADCAST_REFRESH_FLEETVIEW));
+    }
+
+    /**
+     * If auto-launch mode is enabled and in split-screen, launch FleetPanelActivity.
+     * Only called on port API return, ensuring data is ready.
+     */
+    private void autoLaunchFleetPanelIfNeeded() {
+        if (!DISPLAY_MODE_SPLIT.equals(
+                getStringPreferences(getApplicationContext(), PREF_DISPLAY_MODE))) {
+            return;
+        }
+        if (!getBooleanPreferences(getApplicationContext(), PREF_PANEL_AUTO_LAUNCH)) {
+            return;
+        }
+        // Skip if panel is already open
+        if (FleetPanelActivity.isFleetPanelOpen) {
+            return;
+        }
+        // Delegate to KcaViewButtonService to keep launch logic centralized
+        Intent intent = new Intent(this, KcaViewButtonService.class);
+        intent.setAction(KcaViewButtonService.AUTO_LAUNCH_PANEL_ACTION);
+        startService(intent);
     }
 
     public void updateAirbasePopupInfo() {
