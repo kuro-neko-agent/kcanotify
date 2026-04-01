@@ -955,6 +955,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="panel_no_battle_data">No battle in progress</string>
     <string name="panel_no_quest_data">No quest data</string>
     <string name="panel_no_tracked_quest">No tracked quests</string>
+    <string name="quest_progress_complete">Complete</string>
+    <string name="quest_progress_in_progress">In progress</string>
 
     <!-- Phase 8D: Resource labels -->
     <string name="panel_res_fuel">Fuel </string>
@@ -967,6 +969,8 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="panel_res_screw">Screw </string>
 
     <!-- Phase 8D: Equip placeholder -->
+    <string name="hq_label_ships">Ships</string>
+    <string name="hq_label_equip">Equip</string>
     <string name="panel_equip_coming_soon">Coming Soon</string>
 
     <!-- Phase 9A: HQ rank names (api_rank_no 1-10) -->

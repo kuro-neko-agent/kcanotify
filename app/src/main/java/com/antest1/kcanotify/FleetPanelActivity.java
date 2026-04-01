@@ -1,5 +1,6 @@
 package com.antest1.kcanotify;
 
+import android.graphics.drawable.Drawable;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +21,9 @@ import android.widget.LinearLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.transition.TransitionManager;
+import android.transition.AutoTransition;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -34,7 +38,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -64,11 +70,16 @@ import static com.antest1.kcanotify.KcaConstants.PREF_RESIZABLE_PANE;
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
 import static com.antest1.kcanotify.KcaFleetViewService.DECKINFO_REQ_LIST;
+import static com.antest1.kcanotify.KcaFleetViewService.FLEET_COMBINED_ID;
 import static com.antest1.kcanotify.KcaFleetViewService.KC_DECKINFO_REQ_LIST;
 import static com.antest1.kcanotify.KcaFleetViewService.fleetview_menu_keys;
+import static com.antest1.kcanotify.KcaConstants.SEEK_PURE;
 import static com.antest1.kcanotify.KcaService.BROADCAST_REFRESH_FLEETVIEW;
 import static com.antest1.kcanotify.KcaUseStatConstant.FV_BTN_PRESS;
+import static com.antest1.kcanotify.KcaApiData.getQuestTrackInfo;
+import static com.antest1.kcanotify.KcaApiData.isQuestTrackable;
 import static com.antest1.kcanotify.KcaUtils.getId;
+import static com.antest1.kcanotify.KcaUtils.getIdWithFallback;
 import static com.antest1.kcanotify.KcaUtils.getBooleanPreferences;
 import static com.antest1.kcanotify.KcaUtils.getStringPreferences;
 import static com.antest1.kcanotify.KcaUtils.sendUserAnalytics;
@@ -94,10 +105,13 @@ public class FleetPanelActivity extends BaseActivity {
     private FleetDataManager fleetDataManager;
     private KcaDBHelper dbHelper;
     private KcaDeckInfo deckInfoCalc;
+    private KcaQuestTracker questTracker;
 
     private View fleetContentView; // The inflated fleet view content
     private View itemPopupView;    // For equipment popup
     private PopupWindow itemPopupWindow;
+    private View expandedQuestRow = null;  // currently expanded quest row, or null
+    private View expandedShipRow = null;   // currently expanded compact ship row, or null
 
     private Handler mHandler;
     private ScheduledExecutorService timeScheduler;
@@ -130,6 +144,7 @@ public class FleetPanelActivity extends BaseActivity {
         Context contextWithTheme = new ContextThemeWrapper(this, R.style.AppTheme);
 
         dbHelper = new KcaDBHelper(getApplicationContext(), null, KCANOTIFY_DB_VERSION);
+        questTracker = new KcaQuestTracker(getApplicationContext(), null, KCANOTIFY_QTDB_VERSION);
         dbHelper.updateExpScore(0);
         KcaApiData.setDBHelper(dbHelper);
 
@@ -607,19 +622,464 @@ public class FleetPanelActivity extends BaseActivity {
         leftPaneView = LayoutInflater.from(ctx)
                 .inflate(R.layout.panel_left_pane, leftPaneContainer, true);
 
-        // Resource section
-        setupCollapsibleSection(leftPaneView, R.id.section_resource_header,
-                R.id.section_resource_content, R.id.section_resource_arrow);
+        // Fleet section — compact layout with inline fleet tabs
+        setupCompactFleetSection();
+    }
 
-        // Fleet section — inject fleetContentView
-        setupCollapsibleSection(leftPaneView, R.id.section_fleet_header,
-                R.id.section_fleet_content, R.id.section_fleet_arrow);
-        FrameLayout fleetContainer = leftPaneView.findViewById(R.id.section_fleet_content);
-        fleetContainer.addView(fleetContentView);
+    /** Setup the compact fleet section: fleet tabs + ship list (no collapsing) */
+    private void setupCompactFleetSection() {
+        // Fleet tab click listeners
+        int[] tabIds = {R.id.compact_tab_1, R.id.compact_tab_2, R.id.compact_tab_3,
+                R.id.compact_tab_4, R.id.compact_tab_combined};
+        for (int i = 0; i < tabIds.length; i++) {
+            int fleetIdx = i;
+            leftPaneView.findViewById(tabIds[i]).setOnClickListener(v -> {
+                selectedFleetIndex = fleetIdx;
+                bindCompactFleetData();
+            });
+        }
+    }
 
-        // Quest tracking section
-        setupCollapsibleSection(leftPaneView, R.id.section_quest_track_header,
-                R.id.section_quest_track_content, R.id.section_quest_track_arrow);
+    /** Update compact fleet tab highlighting */
+    private void updateCompactFleetTabs() {
+        if (leftPaneView == null) return;
+        int[] tabIds = {R.id.compact_tab_1, R.id.compact_tab_2, R.id.compact_tab_3,
+                R.id.compact_tab_4, R.id.compact_tab_combined};
+        for (int i = 0; i < tabIds.length; i++) {
+            TextView tab = leftPaneView.findViewById(tabIds[i]);
+            if (tab == null) continue;
+            if (i == selectedFleetIndex) {
+                tab.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+            } else {
+                if (i < 4 && KcaExpedition2.isInExpedition(i)) {
+                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoExpedition));
+                } else if (i < 4 && KcaMoraleInfo.getMoraleCompleteTime(i) > 0) {
+                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+                } else if (i == FLEET_COMBINED_ID &&
+                        (KcaMoraleInfo.getMoraleCompleteTime(0) > 0 || KcaMoraleInfo.getMoraleCompleteTime(1) > 0)) {
+                    tab.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+                } else {
+                    tab.setBackgroundColor(0x00000000); // transparent
+                }
+            }
+        }
+    }
+
+    /** Bind compact fleet data to the left pane compact fleet section */
+    private void bindCompactFleetData() {
+        if (leftPaneView == null) return;
+
+        LinearLayout shipList = leftPaneView.findViewById(R.id.compact_fleet_list);
+        if (shipList == null) return;
+        shipList.removeAllViews();
+        expandedShipRow = null;
+
+        JsonArray deckportdata = dbHelper.getJsonArrayValue(DB_KEY_DECKPORT);
+        if (!KcaFleetViewService.isReady || deckportdata == null || deckportdata.size() == 0) {
+            TextView infoLine = leftPaneView.findViewById(R.id.compact_fleet_info);
+            if (infoLine != null) {
+                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNoShip));
+                infoLine.setText(getString(R.string.kca_init_content));
+            }
+            return;
+        }
+
+        int idx = selectedFleetIndex;
+        boolean isCombined = idx == FLEET_COMBINED_ID;
+
+        // Bind ships
+        LayoutInflater inflater = LayoutInflater.from(this);
+        if (isCombined) {
+            bindCompactShipList(inflater, shipList, deckportdata, 0);
+            bindCompactShipList(inflater, shipList, deckportdata, 1);
+        } else if (idx < deckportdata.size()) {
+            bindCompactShipList(inflater, shipList, deckportdata, idx);
+        }
+
+        // Update fleet tabs
+        updateCompactFleetTabs();
+
+        // Build info line
+        bindCompactFleetInfoLine(deckportdata, idx, isCombined);
+    }
+
+    private void bindCompactShipList(LayoutInflater inflater, LinearLayout shipList,
+                                      JsonArray deckportdata, int deckIdx) {
+        int[] shipIdList = deckInfoCalc.getDeckList(deckportdata, deckIdx);
+        for (int shipId : shipIdList) {
+            if (shipId <= 0) continue;
+
+            View row = inflater.inflate(R.layout.view_fleet_compact_item, shipList, false);
+
+            // Single combined query for all ship data
+            JsonObject userData = KcaApiData.getUserShipDataById(shipId,
+                    "ship_id,lv,nowhp,maxhp,cond,slot,slot_ex,onslot,maxslot");
+            if (userData == null) continue;
+
+            int mstShipId = userData.has("ship_id") ? userData.get("ship_id").getAsInt() : 0;
+
+            // Single combined master data query
+            JsonObject kcData = KcaApiData.getKcShipDataById(mstShipId, "name,slot_num");
+            String shipName = (kcData != null && kcData.has("name"))
+                    ? KcaApiData.getShipTranslation(kcData.get("name").getAsString(), mstShipId, false)
+                    : "?";
+            int slotNum = (kcData != null && kcData.has("slot_num"))
+                    ? kcData.get("slot_num").getAsInt() : 5;
+
+            int lv = userData.has("lv") ? userData.get("lv").getAsInt() : 0;
+            int nowHp = userData.has("nowhp") ? userData.get("nowhp").getAsInt() : 0;
+            int maxHp = userData.has("maxhp") ? userData.get("maxhp").getAsInt() : 1;
+            int cond = userData.has("cond") ? userData.get("cond").getAsInt() : 0;
+
+            // Name + Lv
+            TextView nameView = row.findViewById(R.id.compact_name);
+            nameView.setText(shipName + " Lv" + lv);
+
+            // HP text + color
+            TextView hpView = row.findViewById(R.id.compact_hp);
+            hpView.setText(nowHp + "/" + maxHp);
+            if (nowHp * 4 <= maxHp) {
+                hpView.setTextColor(getResources().getColor(R.color.colorHeavyDmgState));
+            } else if (nowHp * 2 <= maxHp) {
+                hpView.setTextColor(getResources().getColor(R.color.colorModerateDmgState));
+            } else if (nowHp * 4 <= maxHp * 3) {
+                hpView.setTextColor(getResources().getColor(R.color.colorLightDmgState));
+            } else if (nowHp < maxHp) {
+                hpView.setTextColor(getResources().getColor(R.color.colorNormalState));
+            } else {
+                hpView.setTextColor(getResources().getColor(R.color.colorFullState));
+            }
+
+            // HP bar
+            ProgressBar hpBar = row.findViewById(R.id.compact_hp_bar);
+            hpBar.setMax(maxHp);
+            hpBar.setProgress(nowHp);
+
+            // Heavy damage background warning on the row
+            if (nowHp * 4 <= maxHp) {
+                View mainRow = row.findViewById(R.id.compact_main_row);
+                mainRow.setBackgroundColor(getResources().getColor(R.color.colorFleetWarning));
+            }
+
+            // Cond badge
+            TextView condView = row.findViewById(R.id.compact_cond);
+            condView.setText(String.valueOf(cond));
+            if (cond > 49) {
+                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipKira));
+                condView.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            } else if (cond >= 40) {
+                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoBtn));
+                condView.setTextColor(getResources().getColor(R.color.white));
+            } else if (cond >= 30) {
+                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoBtn));
+                condView.setTextColor(getResources().getColor(R.color.colorFleetShipFatigue1));
+            } else if (cond >= 20) {
+                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipFatigue1));
+                condView.setTextColor(getResources().getColor(R.color.white));
+            } else {
+                condView.setBackgroundColor(getResources().getColor(R.color.colorFleetShipFatigue2));
+                condView.setTextColor(getResources().getColor(R.color.white));
+            }
+
+            // Equipment icons in compact row (from already-loaded userData)
+            LinearLayout equipIcons = row.findViewById(R.id.compact_equip_icons);
+            if (userData.has("slot")) {
+                JsonArray slot = userData.getAsJsonArray("slot");
+                int slotEx = userData.has("slot_ex") ? userData.get("slot_ex").getAsInt() : 0;
+                float density = getResources().getDisplayMetrics().density;
+                int iconSizePx = (int) (14 * density);
+                int gapPx = (int) (1 * density);
+
+                for (int i = 0; i < slotNum && i < slot.size(); i++) {
+                    int itemId = slot.get(i).getAsInt();
+                    if (itemId == -1) continue;
+                    addCompactEquipIcon(equipIcons, itemId, iconSizePx, gapPx);
+                }
+                if (slotEx > 0) {
+                    addCompactEquipIcon(equipIcons, slotEx, iconSizePx, gapPx);
+                }
+            }
+
+            // Lazy-populate detail: store shipId + slotNum as tags, populate on first expand
+            row.setTag(R.id.compact_equip_detail, shipId);
+            row.setTag(R.id.compact_expand_icon, slotNum);
+
+            // Click to expand/collapse
+            row.setOnClickListener(v -> toggleShipExpand(v));
+
+            shipList.addView(row);
+        }
+    }
+
+    private void addCompactEquipIcon(LinearLayout container, int itemId, int sizePx, int gapPx) {
+        try {
+            JsonObject itemData = KcaApiData.getUserItemStatusById(itemId, "level", "type");
+            if (itemData == null) return;
+            JsonArray typeArr = itemData.getAsJsonArray("type");
+            if (typeArr == null || typeArr.size() < 4) return;
+            int iconType = typeArr.get(3).getAsInt();
+
+            ImageView icon = new ImageView(this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(sizePx, sizePx);
+            if (container.getChildCount() > 0) lp.setMarginStart(gapPx);
+            icon.setLayoutParams(lp);
+            try {
+                icon.setImageResource(getId(KcaUtils.format("item_%d", iconType), R.mipmap.class));
+            } catch (Exception e) {
+                icon.setImageResource(R.mipmap.item_0);
+            }
+            container.addView(icon);
+        } catch (Exception e) {
+            // skip this icon on error
+        }
+    }
+
+    private void populateCompactEquipDetail(LinearLayout detailContainer,
+                                             JsonArray slot, int slotEx, int slotNum,
+                                             JsonObject slotData) {
+        JsonArray onslot = slotData.has("onslot") ? slotData.getAsJsonArray("onslot") : null;
+        JsonArray maxslot = slotData.has("maxslot") ? slotData.getAsJsonArray("maxslot") : null;
+        float density = getResources().getDisplayMetrics().density;
+        int iconSizePx = (int) (18 * density);
+
+        // Main slots — only show up to slot_num (actual slot count for this ship)
+        for (int i = 0; i < slotNum && i < slot.size(); i++) {
+            int itemId = slot.get(i).getAsInt();
+            if (itemId == -1) {
+                addEmptySlotRow(detailContainer);
+            } else {
+                int nowSlot = (onslot != null && i < onslot.size()) ? onslot.get(i).getAsInt() : -1;
+                int maxSlotVal = (maxslot != null && i < maxslot.size()) ? maxslot.get(i).getAsInt() : -1;
+                addEquipDetailRow(detailContainer, itemId, iconSizePx, density, nowSlot, maxSlotVal);
+            }
+        }
+
+        // Extra slot section (補強増設)
+        // slotEx == 0: not unlocked → don't show at all
+        // slotEx == -1: unlocked but empty → show divider + "空"
+        // slotEx > 0: equipped → show divider + equipment
+        if (slotEx != 0) {
+            // Divider line between main slots and extra slot
+            View divider = new View(this);
+            divider.setBackgroundColor(0x40FFFFFF);
+            LinearLayout.LayoutParams divLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * density));
+            divLp.setMargins(0, (int) (2 * density), 0, (int) (2 * density));
+            divider.setLayoutParams(divLp);
+            detailContainer.addView(divider);
+
+            if (slotEx > 0) {
+                addEquipDetailRow(detailContainer, slotEx, iconSizePx, density, -1, -1);
+            } else {
+                // slotEx == -1: unlocked but empty
+                addEmptySlotRow(detailContainer);
+            }
+        }
+    }
+
+    private void addEmptySlotRow(LinearLayout container) {
+        TextView emptyRow = new TextView(this);
+        emptyRow.setText("　空");
+        emptyRow.setTextSize(9);
+        emptyRow.setTextColor(0x80FFFFFF);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins((int) (2 * getResources().getDisplayMetrics().density), 0, 0, 0);
+        emptyRow.setLayoutParams(lp);
+        container.addView(emptyRow);
+    }
+
+    private void addEquipDetailRow(LinearLayout container, int itemId, int iconSizePx,
+                                    float density, int nowSlot, int maxSlotVal) {
+        try {
+            JsonObject itemData = KcaApiData.getUserItemStatusById(itemId, "level,alv", "id,type,name");
+            if (itemData == null) return;
+
+            LinearLayout rowLayout = new LinearLayout(this);
+            rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+            rowLayout.setGravity(Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            rowLayout.setLayoutParams(rowLp);
+
+            // Icon
+            JsonArray typeArr = itemData.getAsJsonArray("type");
+            int iconType = (typeArr != null && typeArr.size() > 3) ? typeArr.get(3).getAsInt() : 0;
+            ImageView icon = new ImageView(this);
+            LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(iconSizePx, iconSizePx);
+            icon.setLayoutParams(iconLp);
+            try {
+                icon.setImageResource(getId(KcaUtils.format("item_%d", iconType), R.mipmap.class));
+            } catch (Exception e) {
+                icon.setImageResource(R.mipmap.item_0);
+            }
+            rowLayout.addView(icon);
+
+            // Build text: "Name ★3 >>7 [04/18]"
+            StringBuilder sb = new StringBuilder();
+            String itemName = itemData.has("name")
+                    ? KcaApiData.getSlotItemTranslation(itemData.get("name").getAsString())
+                    : "?";
+            sb.append(" ").append(itemName);
+
+            int lv = itemData.has("level") ? itemData.get("level").getAsInt() : 0;
+            if (lv > 0) {
+                sb.append(" ").append(getString(R.string.lv_star)).append(lv);
+            }
+
+            int alv = itemData.has("alv") ? itemData.get("alv").getAsInt() : 0;
+            int alvColorId = 0;
+            if (alv > 0) {
+                String alvStr = getString(getId(KcaUtils.format("alv_%d", alv), R.string.class));
+                sb.append(" ").append(alvStr);
+                alvColorId = (alv <= 3) ? 1 : 2;
+            }
+
+            // Aircraft slot count
+            int itemType2 = (typeArr != null && typeArr.size() > 2) ? typeArr.get(2).getAsInt() : 0;
+            if (KcaApiData.isItemAircraft(itemType2) && nowSlot >= 0 && maxSlotVal >= 0) {
+                sb.append(KcaUtils.format(" [%02d/%02d]", nowSlot, maxSlotVal));
+            }
+
+            TextView textView = new TextView(this);
+            textView.setText(sb.toString());
+            textView.setTextSize(9);
+            textView.setTextColor(getResources().getColor(R.color.white));
+            textView.setMaxLines(1);
+            textView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams textLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            textLp.setMarginStart((int) (2 * density));
+            textView.setLayoutParams(textLp);
+            rowLayout.addView(textView);
+
+            container.addView(rowLayout);
+        } catch (Exception e) {
+            // skip on error
+        }
+    }
+
+    private void toggleShipExpand(View row) {
+        LinearLayout detail = row.findViewById(R.id.compact_equip_detail);
+        TextView expandIcon = row.findViewById(R.id.compact_expand_icon);
+        if (detail == null) return;
+
+        boolean isExpanding = detail.getVisibility() == View.GONE;
+
+        // Lazy-load: populate detail on first expand
+        if (isExpanding && detail.getChildCount() == 0) {
+            Object shipIdTag = row.getTag(R.id.compact_equip_detail);
+            Object slotNumTag = row.getTag(R.id.compact_expand_icon);
+            if (shipIdTag instanceof Integer) {
+                int shipId = (int) shipIdTag;
+                int slotNum = (slotNumTag instanceof Integer) ? (int) slotNumTag : 5;
+                JsonObject slotData = KcaApiData.getUserShipDataById(shipId,
+                        "slot,slot_ex,onslot,maxslot");
+                if (slotData != null && slotData.has("slot")) {
+                    JsonArray slot = slotData.getAsJsonArray("slot");
+                    int slotEx = slotData.has("slot_ex") ? slotData.get("slot_ex").getAsInt() : 0;
+                    populateCompactEquipDetail(detail, slot, slotEx, slotNum, slotData);
+                }
+            }
+            // If still empty after loading, nothing to show
+            if (detail.getChildCount() == 0) return;
+        }
+
+        // Collapse previously expanded row (if different)
+        if (expandedShipRow != null && expandedShipRow != row) {
+            collapseShipRow(expandedShipRow);
+        }
+
+        ViewGroup parent = (ViewGroup) row.getParent();
+        AutoTransition transition = new AutoTransition();
+        transition.setDuration(200);
+        TransitionManager.beginDelayedTransition(parent, transition);
+
+        if (isExpanding) {
+            detail.setVisibility(View.VISIBLE);
+            if (expandIcon != null) expandIcon.setText("▾");
+            expandedShipRow = row;
+        } else {
+            detail.setVisibility(View.GONE);
+            if (expandIcon != null) expandIcon.setText("▸");
+            expandedShipRow = null;
+        }
+    }
+
+    private void collapseShipRow(View row) {
+        LinearLayout detail = row.findViewById(R.id.compact_equip_detail);
+        TextView expandIcon = row.findViewById(R.id.compact_expand_icon);
+        if (detail != null) detail.setVisibility(View.GONE);
+        if (expandIcon != null) expandIcon.setText("▸");
+    }
+
+    private void bindCompactFleetInfoLine(JsonArray deckportdata, int idx, boolean isCombined) {
+        TextView infoLine = leftPaneView.findViewById(R.id.compact_fleet_info);
+        if (infoLine == null) return;
+
+        List<String> infoList = new ArrayList<>();
+
+        // Air power
+        String airPower;
+        if (isCombined) {
+            airPower = deckInfoCalc.getAirPowerRangeString(deckportdata, 0, KcaBattle.getEscapeFlag());
+        } else {
+            airPower = deckInfoCalc.getAirPowerRangeString(deckportdata, idx, null);
+        }
+        if (!airPower.isEmpty()) infoList.add(airPower);
+
+        // Seek value
+        double seekValue;
+        if (isCombined) {
+            seekValue = deckInfoCalc.getSeekValue(deckportdata, "0,1", seekcn_internal, KcaBattle.getEscapeFlag());
+        } else {
+            seekValue = deckInfoCalc.getSeekValue(deckportdata, String.valueOf(idx), seekcn_internal, null);
+        }
+        if (seekcn_internal == SEEK_PURE) {
+            infoList.add(KcaUtils.format(getString(R.string.fleetview_seekvalue_d), (int) seekValue));
+        } else {
+            infoList.add(KcaUtils.format(getString(R.string.fleetview_seekvalue_f), seekValue));
+        }
+
+        // Speed
+        String speed;
+        if (isCombined) {
+            speed = deckInfoCalc.getSpeedString(deckportdata, "0,1", KcaBattle.getEscapeFlag());
+        } else {
+            speed = deckInfoCalc.getSpeedString(deckportdata, String.valueOf(idx), null);
+        }
+        infoList.add(speed);
+
+        // TP
+        String tp;
+        if (isCombined) {
+            tp = deckInfoCalc.getTPString(deckportdata, "0,1", KcaBattle.getEscapeFlag());
+        } else {
+            tp = deckInfoCalc.getTPString(deckportdata, String.valueOf(idx), null);
+        }
+        infoList.add(tp);
+
+        String infoText = KcaUtils.joinStr(infoList, " / ");
+
+        // Info line background color based on fleet state
+        if (idx < 4 && KcaExpedition2.isInExpedition(idx)) {
+            infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoExpedition));
+        } else {
+            long moraleTime;
+            if (isCombined) {
+                moraleTime = Math.max(KcaMoraleInfo.getMoraleCompleteTime(0),
+                        KcaMoraleInfo.getMoraleCompleteTime(1));
+            } else {
+                moraleTime = KcaMoraleInfo.getMoraleCompleteTime(idx);
+            }
+            if (moraleTime > 0) {
+                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNotGoodStatus));
+            } else {
+                infoLine.setBackgroundColor(getResources().getColor(R.color.colorFleetInfoNormal));
+            }
+        }
+
+        infoLine.setText(infoText);
     }
 
     /** Initialize the right pane: ViewPager2 + TabLayout with 4 tabs */
@@ -712,22 +1172,7 @@ public class FleetPanelActivity extends BaseActivity {
         }
     }
 
-    /** Generic collapsible section toggle */
-    private void setupCollapsibleSection(View parent, int headerId, int contentId, int arrowId) {
-        View header = parent.findViewById(headerId);
-        View content = parent.findViewById(contentId);
-        ImageView arrow = (ImageView) parent.findViewById(arrowId);
-
-        header.setOnClickListener(v -> {
-            boolean isVisible = content.getVisibility() == View.VISIBLE;
-            content.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            arrow.setImageResource(isVisible
-                    ? R.drawable.ic_arrow_down
-                    : R.drawable.ic_arrow_up);
-        });
-    }
-
-    /** Rank names indexed by api_rank_no (1-10) */
+    /** Rank names indexed by api_rank (1-10) */
     private static final int[] RANK_STRING_IDS = {
         0, // index 0 unused
         R.string.hq_rank_1, R.string.hq_rank_2, R.string.hq_rank_3,
@@ -748,12 +1193,16 @@ public class FleetPanelActivity extends BaseActivity {
             int level = basicInfo.has("api_level") ? basicInfo.get("api_level").getAsInt() : 0;
             hqLevel = level;
             String nickname = basicInfo.has("api_nickname") ? basicInfo.get("api_nickname").getAsString() : "";
-            int rankNo = basicInfo.has("api_rank_no") ? basicInfo.get("api_rank_no").getAsInt() : 0;
+            int rankNo = basicInfo.has("api_rank") ? basicInfo.get("api_rank").getAsInt() : 0;
             String rankName = "";
             if (rankNo >= 1 && rankNo <= 10) {
                 rankName = getString(RANK_STRING_IDS[rankNo]);
             }
-            line1.setText(String.format("Lv.%d %s [%s]", level, nickname, rankName));
+            if (rankName.isEmpty()) {
+                line1.setText(String.format("Lv.%d %s", level, nickname));
+            } else {
+                line1.setText(String.format("Lv.%d %s [%s]", level, nickname, rankName));
+            }
         }
 
         // Line 2: Ship count/max  Equip count/max
@@ -764,33 +1213,45 @@ public class FleetPanelActivity extends BaseActivity {
 
         TextView shipTv = leftPaneView.findViewById(R.id.hq_info_ship_count);
         if (shipTv != null) {
-            shipTv.setText(String.format("\u2693 %d/%d", shipCount, maxShip));
-            if (maxShip > 0) {
-                float ratio = (float) shipCount / maxShip;
-                if (ratio > 0.95f) {
-                    shipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
-                } else if (ratio > 0.90f) {
-                    shipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
-                } else {
-                    shipTv.setTextColor(getResources().getColor(R.color.white));
-                }
+            shipTv.setText(String.format("%s: %d/%d", getString(R.string.hq_label_ships), shipCount, maxShip));
+            // poi-style warning: based on remaining slots (ship < 4 remaining)
+            int shipRemaining = maxShip - shipCount;
+            if (shipRemaining <= 0) {
+                shipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+            } else if (shipRemaining < 4) {
+                shipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+            } else {
+                shipTv.setTextColor(getResources().getColor(R.color.white));
             }
         }
 
         TextView equipTv = leftPaneView.findViewById(R.id.hq_info_equip_count);
         if (equipTv != null) {
-            equipTv.setText(String.format("\u2694 %d/%d", equipCount, maxEquip));
-            if (maxEquip > 0) {
-                float ratio = (float) equipCount / maxEquip;
-                if (ratio > 0.95f) {
-                    equipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
-                } else if (ratio > 0.90f) {
-                    equipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
-                } else {
-                    equipTv.setTextColor(getResources().getColor(R.color.white));
-                }
+            equipTv.setText(String.format("%s: %d/%d", getString(R.string.hq_label_equip), equipCount, maxEquip));
+            // poi-style warning: based on remaining slots (equip < 10 remaining)
+            int equipRemaining = maxEquip - equipCount;
+            if (equipRemaining <= 0) {
+                equipTv.setTextColor(getResources().getColor(R.color.colorSlotDanger));
+            } else if (equipRemaining < 10) {
+                equipTv.setTextColor(getResources().getColor(R.color.colorSlotWarning));
+            } else {
+                equipTv.setTextColor(getResources().getColor(R.color.white));
             }
         }
+    }
+
+    /** Tint compound drawables of a TextView and resize them to 14dp */
+    private void tintCompoundDrawables(TextView tv, int color) {
+        Drawable[] drawables = tv.getCompoundDrawablesRelative();
+        int sizePx = (int) (14 * getResources().getDisplayMetrics().density);
+        for (Drawable d : drawables) {
+            if (d != null) {
+                d.mutate();
+                d.setTint(color);
+                d.setBounds(0, 0, sizePx, sizePx);
+            }
+        }
+        tv.setCompoundDrawablesRelative(drawables[0], drawables[1], drawables[2], drawables[3]);
     }
 
     /** Bind resource data (fuel/ammo/steel/bauxite + instant items) to left pane with icons */
@@ -798,6 +1259,27 @@ public class FleetPanelActivity extends BaseActivity {
         if (leftPaneView == null) return;
         JsonArray material = dbHelper.getJsonArrayValue(DB_KEY_MATERIALS);
         if (material == null) return;
+
+        // Dynamic column count based on pane width
+        GridLayout resGrid = leftPaneView.findViewById(R.id.section_resource_content);
+        if (resGrid != null) {
+            resGrid.post(() -> {
+                int widthPx = resGrid.getWidth();
+                float density = getResources().getDisplayMetrics().density;
+                int widthDp = (int) (widthPx / density);
+                int cols = widthDp >= 220 ? 4 : widthDp >= 150 ? 3 : 2;
+                if (resGrid.getColumnCount() != cols) {
+                    resGrid.setColumnCount(cols);
+                    // Update each child's column spec to auto-flow
+                    for (int c = 0; c < resGrid.getChildCount(); c++) {
+                        View child = resGrid.getChildAt(c);
+                        GridLayout.LayoutParams glp = (GridLayout.LayoutParams) child.getLayoutParams();
+                        glp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
+                        child.setLayoutParams(glp);
+                    }
+                }
+            });
+        }
 
         // Resource IDs now point to TextViews inside icon+number grid cells
         int[] resIds = {
@@ -835,6 +1317,7 @@ public class FleetPanelActivity extends BaseActivity {
         LinearLayout container = leftPaneView.findViewById(R.id.section_quest_track_content);
         if (container == null) return;
         container.removeAllViews();
+        expandedQuestRow = null;
 
         JsonArray questList = dbHelper.getCurrentQuestList();
         if (questList == null || questList.size() == 0) {
@@ -847,20 +1330,199 @@ public class FleetPanelActivity extends BaseActivity {
             return;
         }
 
-        for (int i = 0; i < questList.size(); i++) {
-            JsonObject quest = questList.get(i).getAsJsonObject();
-            if (quest.has("api_no") && quest.has("api_title")) {
-                TextView tv = new TextView(this);
-                String title = quest.get("api_title").getAsString();
-                tv.setText(title);
-                tv.setTextColor(getResources().getColor(R.color.white));
-                tv.setTextSize(11);
-                tv.setSingleLine(true);
-                tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                tv.setPadding(4, 2, 4, 2);
-                container.addView(tv);
+        // Get tracker data for progress info
+        JsonArray trackerData = questTracker.getQuestTrackerData();
+        Map<String, JsonObject> trackerMap = new HashMap<>();
+        if (trackerData != null) {
+            for (int i = 0; i < trackerData.size(); i++) {
+                JsonObject t = trackerData.get(i).getAsJsonObject();
+                trackerMap.put(t.get("id").getAsString(), t);
             }
         }
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        for (int i = 0; i < questList.size(); i++) {
+            JsonObject quest = questList.get(i).getAsJsonObject();
+            if (!quest.has("api_no") || !quest.has("api_title")) continue;
+
+            View row = inflater.inflate(R.layout.item_quest_track, container, false);
+
+            // Category color bar (using existing colorQuestCategory resources)
+            View catBar = row.findViewById(R.id.quest_track_category_bar);
+            int category = quest.has("api_category") ? quest.get("api_category").getAsInt() : 0;
+            int catColorId = getIdWithFallback(
+                    KcaUtils.format("colorQuestCategory%d", category),
+                    "colorQuestCategory0", R.color.class);
+            catBar.setBackgroundColor(getResources().getColor(catColorId));
+
+            // Type badge (using localized quest_label_type strings and colorQuestLabel colors)
+            TextView typeBadge = row.findViewById(R.id.quest_track_type_badge);
+            int labelType = quest.has("api_label_type") ? quest.get("api_label_type").getAsInt() : 0;
+            int labelStringId = getIdWithFallback(
+                    KcaUtils.format("quest_label_type_%d", labelType),
+                    "quest_label_type_0", R.string.class);
+            typeBadge.setText(getString(labelStringId));
+            int labelColorId = getIdWithFallback(
+                    KcaUtils.format("colorQuestLabel%d", labelType > 100 ? 100 : labelType),
+                    "colorQuestLabel0", R.color.class);
+            typeBadge.setBackgroundColor(getResources().getColor(labelColorId));
+
+            // Title
+            TextView title = row.findViewById(R.id.quest_track_title);
+            title.setText(quest.get("api_title").getAsString());
+
+            // Progress
+            TextView progress = row.findViewById(R.id.quest_track_progress);
+            String questId = String.valueOf(quest.get("api_no").getAsInt());
+            JsonObject tracker = trackerMap.get(questId);
+
+            if (tracker != null && tracker.has("cond")) {
+                JsonArray cond = tracker.getAsJsonArray("cond");
+                JsonObject trackInfo = KcaApiData.getQuestTrackInfo(questId);
+                if (trackInfo != null && trackInfo.has("cond")) {
+                    JsonArray condMax = trackInfo.getAsJsonArray("cond");
+                    int initialOffset = KcaQuestTracker.getInitialCondValue(questId);
+                    int totalCount = 0, totalRequired = 0;
+                    StringBuilder subgoalText = new StringBuilder();
+                    for (int j = 0; j < cond.size(); j++) {
+                        int count = cond.get(j).getAsInt();
+                        int required = j < condMax.size() ? condMax.get(j).getAsInt() - initialOffset : 0;
+                        count = Math.min(count, required);
+                        totalCount += count;
+                        totalRequired += required;
+                        if (cond.size() > 1 && required > 0) {
+                            if (subgoalText.length() > 0) subgoalText.append(" | ");
+                            subgoalText.append(count).append("/").append(required);
+                        }
+                    }
+                    progress.setText(totalCount + "/" + totalRequired);
+                    progress.setTextColor(getProgressColor(totalCount, totalRequired));
+
+                    if (cond.size() > 1 && subgoalText.length() > 0) {
+                        TextView subgoals = row.findViewById(R.id.quest_track_subgoals);
+                        subgoals.setText(subgoalText.toString());
+                        subgoals.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    setProgressFromFlag(progress, quest);
+                }
+            } else {
+                setProgressFromFlag(progress, quest);
+            }
+
+            // Populate detail section (hidden until clicked)
+            LinearLayout detailSection = row.findViewById(R.id.quest_track_detail);
+            populateQuestDetail(detailSection, quest, tracker, labelType);
+
+            // Click to expand/collapse
+            row.setOnClickListener(v -> toggleQuestExpand(v));
+
+            container.addView(row);
+        }
+    }
+
+    private int getProgressColor(int count, int required) {
+        if (required <= 0) return 0xFFFFFFFF;
+        float pct = (float) count / required;
+        if (pct >= 1.0f) return 0xFF4CAF50;  // Green - complete
+        if (pct >= 0.8f) return 0xFF42A5F5;  // Blue - 80%
+        if (pct >= 0.5f) return 0xFFFFEB3B;  // Yellow - 50%
+        return 0xFFFFFFFF;  // White - in progress
+    }
+
+    private void setProgressFromFlag(TextView progress, JsonObject quest) {
+        int state = quest.has("api_state") ? quest.get("api_state").getAsInt() : 0;
+        int flag = quest.has("api_progress_flag") ? quest.get("api_progress_flag").getAsInt() : 0;
+        if (state == 3) {
+            progress.setText("✓");
+            progress.setTextColor(0xFF4CAF50);
+        } else if (flag == 2) {
+            progress.setText("80%");
+            progress.setTextColor(0xFF42A5F5);
+        } else if (flag == 1) {
+            progress.setText("50%");
+            progress.setTextColor(0xFFFFEB3B);
+        } else {
+            progress.setText("");
+        }
+    }
+
+    private void populateQuestDetail(LinearLayout detail, JsonObject quest, JsonObject tracker, int labelType) {
+        // Description
+        TextView desc = detail.findViewById(R.id.quest_track_description);
+        if (quest.has("api_detail")) {
+            String text = quest.get("api_detail").getAsString().replaceAll("<br\\s*/?>", "\n");
+            desc.setText(text);
+            desc.setVisibility(View.VISIBLE);
+        } else {
+            desc.setVisibility(View.GONE);
+        }
+
+        // Per-condition breakdown
+        LinearLayout condList = detail.findViewById(R.id.quest_track_cond_list);
+        condList.removeAllViews();
+        if (tracker != null && tracker.has("cond")) {
+            String questId = tracker.get("id").getAsString();
+            JsonObject trackInfo = KcaApiData.getQuestTrackInfo(questId);
+            if (trackInfo != null && trackInfo.has("cond")) {
+                JsonArray cond = tracker.getAsJsonArray("cond");
+                JsonArray condMax = trackInfo.getAsJsonArray("cond");
+                int initialOffset = KcaQuestTracker.getInitialCondValue(questId);
+                for (int j = 0; j < cond.size(); j++) {
+                    int count = cond.get(j).getAsInt();
+                    int required = j < condMax.size() ? condMax.get(j).getAsInt() - initialOffset : 0;
+                    count = Math.min(count, required);
+                    if (required > 0) {
+                        TextView condView = new TextView(this);
+                        condView.setText("  ● " + count + " / " + required);
+                        condView.setTextColor(getProgressColor(count, required));
+                        condView.setTextSize(10);
+                        condList.addView(condView);
+                    }
+                }
+            }
+        }
+
+        // Type label
+        TextView typeLabel = detail.findViewById(R.id.quest_track_type_label);
+        int labelStringId = getIdWithFallback(
+                KcaUtils.format("quest_label_type_%d", labelType),
+                "quest_label_type_0", R.string.class);
+        typeLabel.setText("[" + getString(labelStringId) + "]");
+    }
+
+    private void toggleQuestExpand(View row) {
+        LinearLayout detail = row.findViewById(R.id.quest_track_detail);
+        TextView expandIcon = row.findViewById(R.id.quest_track_expand_icon);
+        boolean isExpanding = detail.getVisibility() == View.GONE;
+
+        // Collapse previously expanded row (if different)
+        if (expandedQuestRow != null && expandedQuestRow != row) {
+            collapseQuestRow(expandedQuestRow);
+        }
+
+        // Use TransitionManager for smooth animation
+        ViewGroup parent = (ViewGroup) row.getParent();
+        AutoTransition transition = new AutoTransition();
+        transition.setDuration(200);
+        TransitionManager.beginDelayedTransition(parent, transition);
+
+        if (isExpanding) {
+            detail.setVisibility(View.VISIBLE);
+            if (expandIcon != null) expandIcon.setText("▾");
+            expandedQuestRow = row;
+        } else {
+            detail.setVisibility(View.GONE);
+            if (expandIcon != null) expandIcon.setText("▸");
+            expandedQuestRow = null;
+        }
+    }
+
+    private void collapseQuestRow(View row) {
+        LinearLayout detail = row.findViewById(R.id.quest_track_detail);
+        TextView expandIcon = row.findViewById(R.id.quest_track_expand_icon);
+        if (detail != null) detail.setVisibility(View.GONE);
+        if (expandIcon != null) expandIcon.setText("▸");
     }
 
     private void refreshFleetData() {
@@ -881,6 +1543,9 @@ public class FleetPanelActivity extends BaseActivity {
         bindHQInfoData();
         bindResourceData();
         bindQuestTrackData();
+        if (splitPaneEnabled) {
+            bindCompactFleetData();
+        }
     }
 
     private void startTimer() {
