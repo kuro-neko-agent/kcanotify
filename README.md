@@ -6,7 +6,7 @@ Viewer Application for KanColle Android
 
 This repository is a personal fork of [kcanotify](https://github.com/antest1/kcanotify), originally created by [antest1](https://github.com/antest1).
 
-I maintain this fork for my own use and experimentation, mainly to add foldable-friendly features such as a split-screen fleet panel and a compact UI. Development was partially AI-assisted using Claude Code.
+I maintain this fork for my own use and experimentation, mainly to add foldable-friendly features such as a split-screen fleet panel and a compact UI. Development was primarily AI-assisted using Claude Code.
 
 This repository is not affiliated with, endorsed by, or officially associated with the upstream project or its original author.
 
