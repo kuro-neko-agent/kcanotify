@@ -2,7 +2,13 @@
 <img src="https://kcanotify-docs.s3.ap-northeast-1.amazonaws.com/common/main_image.webp" width=192/>
 Viewer Application for KanColle Android
 
-> ⚠️ **This is a personal fork.** Developed with Claude Code (vibe coding) for my own use. Not affiliated with or endorsed by the [original project](https://github.com/antest1/kcanotify). Features added here (split-screen fleet panel, compact UI, etc.) are experimental and may not follow upstream conventions.
+## Disclaimer
+
+This repository is a personal fork of [kcanotify](https://github.com/antest1/kcanotify), originally created by [antest1](https://github.com/antest1).
+
+I maintain this fork for my own use and experimentation, mainly to add foldable-friendly features such as a split-screen fleet panel and a compact UI. Development was partially AI-assisted using Claude Code.
+
+This repository is not affiliated with, endorsed by, or officially associated with the upstream project or its original author.
 
 About Project
 -------
@@ -77,7 +83,9 @@ Thank you to all our backers! [[Become a backer](https://opencollective.com/kcan
 
 License
 -------
-[GNU General Public License version 3](http://www.gnu.org/licenses/gpl.txt)
+As a fork of kcanotify, this repository continues to be distributed under the [GNU General Public License v3.0 (GPL-3.0)](http://www.gnu.org/licenses/gpl.txt). Original copyright and license notices are retained where applicable, and modifications in this fork are released under the same license.
+
+See the [LICENSE](./LICENSE) file for details.
 
 Copyright (c) 2016-2026 antest1(IE10)
 
