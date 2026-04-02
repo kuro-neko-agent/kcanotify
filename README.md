@@ -2,6 +2,8 @@
 <img src="https://kcanotify-docs.s3.ap-northeast-1.amazonaws.com/common/main_image.webp" width=192/>
 Viewer Application for KanColle Android
 
+> ⚠️ **This is a personal fork.** Developed with Claude Code (vibe coding) for my own use. Not affiliated with or endorsed by the [original project](https://github.com/antest1/kcanotify). Features added here (split-screen fleet panel, compact UI, etc.) are experimental and may not follow upstream conventions.
+
 About Project
 -------
 Kcanotify is an open-source viewer tool for Kantai Collection Android, provides various features like expedition/docking notification or see battle prediction.
