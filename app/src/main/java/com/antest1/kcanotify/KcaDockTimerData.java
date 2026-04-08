@@ -72,8 +72,8 @@ public class KcaDockTimerData {
         return slots;
     }
 
-    /** 4 construction dock slots. */
-    public static List<DockSlot> getConstructionSlots(KcaDBHelper dbHelper, boolean showName) {
+    /** 4 construction dock slots. Always shows ship name directly (no tap-to-reveal). */
+    public static List<DockSlot> getConstructionSlots(KcaDBHelper dbHelper) {
         List<DockSlot> slots = new ArrayList<>();
         JsonArray kdock = dbHelper.getJsonArrayValue(DB_KEY_KDOCKDATA);
         if (kdock == null) {
@@ -94,16 +94,11 @@ public class KcaDockTimerData {
                 continue;
             }
             // Determine if LSC: api_item1 >= 1000
-            boolean isLsc = false;
-            if (item.has("api_item1") && item.get("api_item1").getAsInt() >= 1000) {
-                isLsc = true;
-            }
-            String name = "???";
-            if (showName) {
-                JsonObject kcData = KcaApiData.getKcShipDataById(shipId, "name");
-                if (kcData != null && kcData.has("name")) {
-                    name = KcaApiData.getShipTranslation(kcData.get("name").getAsString(), shipId, false);
-                }
+            boolean isLsc = item.has("api_item1") && item.get("api_item1").getAsInt() >= 1000;
+            String name = "—";
+            JsonObject kcData = KcaApiData.getKcShipDataById(shipId, "name");
+            if (kcData != null && kcData.has("name")) {
+                name = KcaApiData.getShipTranslation(kcData.get("name").getAsString(), shipId, false);
             }
             long completeMs = item.get("api_complete_time").getAsLong();
             long nowMs = System.currentTimeMillis();

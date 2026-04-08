@@ -21,11 +21,11 @@
         <!-- Section 2: Server reset countdown (Phase 9E) -->
         <include layout="@layout/panel_section_reset_timer" />
 
-        <!-- Section 3: Dock/Construction/Expedition timers (Phase 9D) -->
-        <include layout="@layout/panel_section_docks" />
-
-        <!-- Section 4: Fleet info (compact for split-pane) -->
+        <!-- Section 3: Fleet info (compact for split-pane) -->
         <include layout="@layout/panel_section_fleet_compact" />
+
+        <!-- Section 4: Dock/Construction/Expedition timers (Phase 9D) -->
+        <include layout="@layout/panel_section_docks" />
 
         <!-- Section 5: Quest tracking -->
         <include layout="@layout/panel_section_quest_track" />

@@ -7,48 +7,43 @@
     android:orientation="vertical"
     android:padding="2dp">
 
-    <!-- Repair docks -->
-    <TextView
-        android:id="@+id/docks_repair_header"
+    <!-- Combined repair + construction header row -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/panel_section_dock_repair"
-        android:textColor="@color/white"
-        android:textSize="10sp"
-        android:paddingStart="2dp"
-        android:paddingEnd="2dp"
-        android:paddingBottom="1dp"
-        android:alpha="0.7" />
+        android:orientation="horizontal"
+        android:paddingBottom="1dp">
 
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/panel_section_dock_repair"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:paddingStart="2dp"
+            android:alpha="0.7" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/panel_section_dock_constr"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:paddingStart="2dp"
+            android:alpha="0.7" />
+
+    </LinearLayout>
+
+    <!-- Combined repair+construction grid: 4 columns (repair_name|repair_time|constr_name|constr_time) -->
     <GridLayout
-        android:id="@+id/docks_repair_grid"
+        android:id="@+id/docks_combined_grid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="2"
+        android:columnCount="4"
         android:layout_marginBottom="4dp">
-        <!-- 4 rows added programmatically -->
-    </GridLayout>
-
-    <!-- Construction docks -->
-    <TextView
-        android:id="@+id/docks_constr_header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/panel_section_dock_constr"
-        android:textColor="@color/white"
-        android:textSize="10sp"
-        android:paddingStart="2dp"
-        android:paddingEnd="2dp"
-        android:paddingBottom="1dp"
-        android:alpha="0.7" />
-
-    <GridLayout
-        android:id="@+id/docks_constr_grid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:layout_marginBottom="4dp">
-        <!-- 4 rows added programmatically -->
+        <!-- 4 rows added programmatically in FleetPanelActivity.bindRepairConstrGrid() -->
     </GridLayout>
 
     <!-- Expedition timers -->

@@ -74,7 +74,6 @@ import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_PRACTICE;
 import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_QUARTERLY;
 import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_SENKA;
 import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_WEEKLY;
-import static com.antest1.kcanotify.KcaConstants.PREF_SHOW_CONSTRSHIP_NAME;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -657,6 +656,29 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Fleet section — compact layout with inline fleet tabs
         setupCompactFleetSection();
+
+        // Reset timer section — collapsible, default collapsed
+        setupResetTimerCollapse();
+    }
+
+    /** Setup collapsible reset timer section (default collapsed). */
+    private void setupResetTimerCollapse() {
+        View header = leftPaneView.findViewById(R.id.reset_timer_header);
+        final View content = leftPaneView.findViewById(R.id.reset_timer_content);
+        final TextView icon = leftPaneView.findViewById(R.id.reset_timer_expand_icon);
+        if (header == null || content == null) return;
+        // Default: collapsed
+        content.setVisibility(View.GONE);
+        if (icon != null) icon.setText("▸");
+        header.setOnClickListener(v -> {
+            if (content.getVisibility() == View.VISIBLE) {
+                content.setVisibility(View.GONE);
+                if (icon != null) icon.setText("▸");
+            } else {
+                content.setVisibility(View.VISIBLE);
+                if (icon != null) icon.setText("▾");
+            }
+        });
     }
 
     /** Setup the compact fleet section: fleet tabs + ship list (no collapsing) */
@@ -1449,14 +1471,72 @@ public class FleetPanelActivity extends BaseActivity {
         View sectionView = leftPaneView.findViewById(R.id.section_docks);
         if (sectionView == null) return;
 
-        boolean showShipName = getBooleanPreferences(getApplicationContext(), PREF_SHOW_CONSTRSHIP_NAME);
-
-        bindDockGrid(leftPaneView.findViewById(R.id.docks_repair_grid),
-                KcaDockTimerData.getRepairSlots(dbHelper));
-        bindDockGrid(leftPaneView.findViewById(R.id.docks_constr_grid),
-                KcaDockTimerData.getConstructionSlots(dbHelper, showShipName));
+        bindRepairConstrGrid(leftPaneView.findViewById(R.id.docks_combined_grid),
+                KcaDockTimerData.getRepairSlots(dbHelper),
+                KcaDockTimerData.getConstructionSlots(dbHelper));
         bindDockGrid(leftPaneView.findViewById(R.id.docks_expd_grid),
                 KcaDockTimerData.getExpeditionSlots(dbHelper));
+    }
+
+    /**
+     * Bind repair and construction slots side by side into a 4-column GridLayout.
+     * Columns: repair_name | repair_time | constr_name | constr_time
+     */
+    private void bindRepairConstrGrid(GridLayout grid,
+            java.util.List<KcaDockTimerData.DockSlot> repair,
+            java.util.List<KcaDockTimerData.DockSlot> constr) {
+        if (grid == null) return;
+        grid.removeAllViews();
+        float density = getResources().getDisplayMetrics().density;
+        int rows = Math.max(repair.size(), constr.size());
+        for (int i = 0; i < rows; i++) {
+            KcaDockTimerData.DockSlot r = i < repair.size() ? repair.get(i) : null;
+            KcaDockTimerData.DockSlot c = i < constr.size() ? constr.get(i) : null;
+            addCombinedDockRow(grid, r, c, i, density);
+        }
+    }
+
+    private void addCombinedDockRow(GridLayout grid,
+            KcaDockTimerData.DockSlot repair, KcaDockTimerData.DockSlot constr,
+            int row, float density) {
+        // repair name (col 0, weight 0.30)
+        addDockCell(grid, repair != null ? repair.label : "—",
+                repair != null ? repair.state : KcaDockTimerData.STATE_EMPTY,
+                row, 0, 0.30f, true, density);
+        // repair time (col 1, weight 0.20)
+        String repairTime = (repair != null && repair.completionMs > 0)
+                ? KcaDockTimerData.formatTime(repair.completionMs) : "";
+        addDockCell(grid, repairTime,
+                repair != null ? repair.state : KcaDockTimerData.STATE_EMPTY,
+                row, 1, 0.20f, false, density);
+        // constr name (col 2, weight 0.30)
+        addDockCell(grid, constr != null ? constr.label : "—",
+                constr != null ? constr.state : KcaDockTimerData.STATE_EMPTY,
+                row, 2, 0.30f, true, density);
+        // constr time (col 3, weight 0.20)
+        String constrTime = (constr != null && constr.completionMs > 0)
+                ? KcaDockTimerData.formatTime(constr.completionMs) : "";
+        addDockCell(grid, constrTime,
+                constr != null ? constr.state : KcaDockTimerData.STATE_EMPTY,
+                row, 3, 0.20f, false, density);
+    }
+
+    private void addDockCell(GridLayout grid, String text, int state,
+            int row, int col, float weight, boolean isName, float density) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(9);
+        tv.setTextColor(getDockTextColor(state));
+        tv.setMaxLines(1);
+        tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        if (!isName) tv.setTypeface(android.graphics.Typeface.MONOSPACE);
+        GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
+                GridLayout.spec(row, 1, weight),
+                GridLayout.spec(col, 1, weight));
+        lp.width = 0;
+        lp.setMargins((int)(2 * density), 0, 0, 0);
+        tv.setLayoutParams(lp);
+        grid.addView(tv);
     }
 
     private void bindDockGrid(GridLayout grid, java.util.List<KcaDockTimerData.DockSlot> slots) {
