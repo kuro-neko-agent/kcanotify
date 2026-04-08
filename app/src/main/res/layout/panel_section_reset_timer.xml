@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 9E: Server Reset Countdown section for the left pane -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/section_reset_timer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="2dp">
+
+    <!-- Section label -->
+    <TextView
+        android:id="@+id/reset_timer_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/panel_section_reset_timer"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
+        android:paddingBottom="2dp"
+        android:alpha="0.7" />
+
+    <!-- 2-column grid: label | countdown per enabled type -->
+    <GridLayout
+        android:id="@+id/reset_timer_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="0dp">
+
+        <!-- Rows are added programmatically in FleetPanelActivity.bindResetTimerData() -->
+
+    </GridLayout>
+
+</LinearLayout>
