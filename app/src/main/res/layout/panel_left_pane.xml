@@ -18,10 +18,16 @@
         <!-- Section 1: Resource overview -->
         <include layout="@layout/panel_section_resource" />
 
-        <!-- Section 2: Fleet info (compact for split-pane) -->
+        <!-- Section 2: Server reset countdown (Phase 9E) -->
+        <include layout="@layout/panel_section_reset_timer" />
+
+        <!-- Section 3: Dock/Construction/Expedition timers (Phase 9D) -->
+        <include layout="@layout/panel_section_docks" />
+
+        <!-- Section 4: Fleet info (compact for split-pane) -->
         <include layout="@layout/panel_section_fleet_compact" />
 
-        <!-- Section 3: Quest tracking -->
+        <!-- Section 5: Quest tracking -->
         <include layout="@layout/panel_section_quest_track" />
 
     </LinearLayout>

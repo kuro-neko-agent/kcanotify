@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 9D: Dock/Construction/Expedition timers section for the left pane -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/section_docks"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="2dp">
+
+    <!-- Repair docks -->
+    <TextView
+        android:id="@+id/docks_repair_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/panel_section_dock_repair"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
+        android:paddingBottom="1dp"
+        android:alpha="0.7" />
+
+    <GridLayout
+        android:id="@+id/docks_repair_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:layout_marginBottom="4dp">
+        <!-- 4 rows added programmatically -->
+    </GridLayout>
+
+    <!-- Construction docks -->
+    <TextView
+        android:id="@+id/docks_constr_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/panel_section_dock_constr"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
+        android:paddingBottom="1dp"
+        android:alpha="0.7" />
+
+    <GridLayout
+        android:id="@+id/docks_constr_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:layout_marginBottom="4dp">
+        <!-- 4 rows added programmatically -->
+    </GridLayout>
+
+    <!-- Expedition timers -->
+    <TextView
+        android:id="@+id/docks_expd_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/panel_section_dock_expd"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
+        android:paddingBottom="1dp"
+        android:alpha="0.7" />
+
+    <GridLayout
+        android:id="@+id/docks_expd_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2">
+        <!-- 3 rows added programmatically -->
+    </GridLayout>
+
+</LinearLayout>
