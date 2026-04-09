@@ -879,6 +879,22 @@ https://github.com/antest1/kcanotify/blob/master/app/src/main/res/values/strings
     <string name="panel_section_fleet">舰队</string>
     <string name="panel_section_quest_track">任务追踪</string>
 
+    <!-- Phase 9E: Server Reset Countdown -->
+    <string name="panel_section_reset_timer">服务器重置</string>
+    <string name="reset_type_practice">演习</string>
+    <string name="reset_type_daily">每日任务</string>
+    <string name="reset_type_weekly">每周</string>
+    <string name="reset_type_quarterly">每季度</string>
+    <string name="reset_type_monthly">每月</string>
+    <string name="reset_type_senka">战果</string>
+    <string name="reset_type_eo">EO 重置</string>
+
+    <!-- Phase 9D: Dock/Construction/Expedition Timers -->
+    <string name="panel_section_dock_repair">入渠</string>
+    <string name="panel_section_dock_constr">建造</string>
+    <string name="panel_section_dock_expd">远征</string>
+
+
     <!-- Phase 8D: Empty states -->
     <string name="panel_no_battle_data">无战斗数据</string>
     <string name="panel_no_quest_data">无任务数据</string>

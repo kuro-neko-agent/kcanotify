@@ -873,6 +873,22 @@
     <string name="panel_section_fleet">함대</string>
     <string name="panel_section_quest_track">임무 추적</string>
 
+    <!-- Phase 9E: Server Reset Countdown -->
+    <string name="panel_section_reset_timer">서버 리셋</string>
+    <string name="reset_type_practice">연습</string>
+    <string name="reset_type_daily">데일리</string>
+    <string name="reset_type_weekly">위클리</string>
+    <string name="reset_type_quarterly">쿼터리</string>
+    <string name="reset_type_monthly">먼슬리</string>
+    <string name="reset_type_senka">전과</string>
+    <string name="reset_type_eo">EO 리셋</string>
+
+    <!-- Phase 9D: Dock/Construction/Expedition Timers -->
+    <string name="panel_section_dock_repair">입거</string>
+    <string name="panel_section_dock_constr">건조</string>
+    <string name="panel_section_dock_expd">원정</string>
+
+
     <!-- Phase 8D: Empty states -->
     <string name="panel_no_battle_data">전투 데이터 없음</string>
     <string name="panel_no_quest_data">임무 데이터 없음</string>

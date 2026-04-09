@@ -15,13 +15,19 @@
         <!-- Section 0: HQ Info bar -->
         <include layout="@layout/panel_section_hq_info" />
 
-        <!-- Section 1: Resource overview -->
+        <!-- Section 1: Server reset countdown (Phase 9E) — compact collapsible -->
+        <include layout="@layout/panel_section_reset_timer" />
+
+        <!-- Section 2: Resource overview -->
         <include layout="@layout/panel_section_resource" />
 
-        <!-- Section 2: Fleet info (compact for split-pane) -->
+        <!-- Section 3: Fleet info (compact for split-pane) -->
         <include layout="@layout/panel_section_fleet_compact" />
 
-        <!-- Section 3: Quest tracking -->
+        <!-- Section 4: Dock/Construction/Expedition timers (Phase 9D) -->
+        <include layout="@layout/panel_section_docks" />
+
+        <!-- Section 5: Quest tracking -->
         <include layout="@layout/panel_section_quest_track" />
 
     </LinearLayout>

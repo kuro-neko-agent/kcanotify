@@ -555,6 +555,15 @@ public final class KcaConstants {
     public static final String PREF_FV_ITEM_3 = "fleetview_item_select_value_3";
     public static final String PREF_FV_ITEM_4 = "fleetview_item_select_value_4";
 
+    // Phase 9E: Server reset timer visibility prefs (default on: practice, daily, weekly, quarterly)
+    public static final String PREF_RESET_SHOW_PRACTICE  = "reset_show_practice";
+    public static final String PREF_RESET_SHOW_DAILY     = "reset_show_daily";
+    public static final String PREF_RESET_SHOW_WEEKLY    = "reset_show_weekly";
+    public static final String PREF_RESET_SHOW_QUARTERLY = "reset_show_quarterly";
+    public static final String PREF_RESET_SHOW_MONTHLY   = "reset_show_monthly";
+    public static final String PREF_RESET_SHOW_SENKA     = "reset_show_senka";
+    public static final String PREF_RESET_SHOW_EO        = "reset_show_eo";
+
 
     public static final String[] PREF_ARRAY = {
             PREF_CHECK_UPDATE,

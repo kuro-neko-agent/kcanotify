@@ -67,6 +67,13 @@ import static com.antest1.kcanotify.KcaConstants.EXTRA_TAB_INDEX;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_VIEW_LIST;
 import static com.antest1.kcanotify.KcaConstants.KCA_MSG_QUEST_COMPLETE;
 import static com.antest1.kcanotify.KcaConstants.PREF_RESIZABLE_PANE;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_DAILY;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_EO;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_MONTHLY;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_PRACTICE;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_QUARTERLY;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_SENKA;
+import static com.antest1.kcanotify.KcaConstants.PREF_RESET_SHOW_WEEKLY;
 
 import android.content.SharedPreferences;
 import static com.antest1.kcanotify.KcaConstants.PREF_KCA_SEEK_CN;
@@ -121,6 +128,9 @@ public class FleetPanelActivity extends BaseActivity {
     private int switch_status = 1;
 
     private View leftPaneView; // Left pane root (only in split pane mode)
+    // Dock grid cells — created once, updated each tick (4 rows × 4 cols, then 3 rows × 2 cols)
+    private TextView[] mDockCombinedCells; // 16 cells: row*4+col
+    private TextView[] mDockExpdCells;     // 6 cells: row*2+col
     private RightPanePagerAdapter pagerAdapter;
     private ViewPager2 viewPager;
     private int hqLevel = 1; // cached HQ level for resource regen cap calculation
@@ -649,6 +659,32 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Fleet section — compact layout with inline fleet tabs
         setupCompactFleetSection();
+
+        // Reset timer section — collapsible, default collapsed
+        setupResetTimerCollapse();
+
+        // Dock timer grids — create TextViews once; ticks only call setText/setTextColor
+        initDockGrids();
+    }
+
+    /** Setup collapsible reset timer section (default collapsed). */
+    private void setupResetTimerCollapse() {
+        View header = leftPaneView.findViewById(R.id.reset_timer_header);
+        final View content = leftPaneView.findViewById(R.id.reset_timer_content);
+        final TextView icon = leftPaneView.findViewById(R.id.reset_timer_expand_icon);
+        if (header == null || content == null) return;
+        // Default: collapsed
+        content.setVisibility(View.GONE);
+        if (icon != null) icon.setText("▸");
+        header.setOnClickListener(v -> {
+            if (content.getVisibility() == View.VISIBLE) {
+                content.setVisibility(View.GONE);
+                if (icon != null) icon.setText("▸");
+            } else {
+                content.setVisibility(View.VISIBLE);
+                if (icon != null) icon.setText("▾");
+            }
+        });
     }
 
     /** Setup the compact fleet section: fleet tabs + ship list (no collapsing) */
@@ -1336,6 +1372,224 @@ public class FleetPanelActivity extends BaseActivity {
         }
     }
 
+    // ---- Phase 9E: Server Reset Countdown ----
+
+    /** Label string resource IDs for each reset type, indexed by KcaResetTimer.TYPE_* */
+    private static final int[] RESET_TYPE_LABEL_RES = {
+        R.string.reset_type_practice,
+        R.string.reset_type_daily,
+        R.string.reset_type_weekly,
+        R.string.reset_type_quarterly,
+        R.string.reset_type_monthly,
+        R.string.reset_type_senka,
+        R.string.reset_type_eo,
+    };
+
+    /**
+     * Determine which reset types are enabled by prefs (defaults: practice/daily/weekly/quarterly).
+     * Returns an int[] of enabled KcaResetTimer.TYPE_* constants.
+     */
+    private int[] getEnabledResetTypes() {
+        SharedPreferences prefs = getSharedPreferences("pref", MODE_PRIVATE);
+        boolean[] show = {
+            prefs.getBoolean(PREF_RESET_SHOW_PRACTICE,  true),
+            prefs.getBoolean(PREF_RESET_SHOW_DAILY,     true),
+            prefs.getBoolean(PREF_RESET_SHOW_WEEKLY,    true),
+            prefs.getBoolean(PREF_RESET_SHOW_QUARTERLY, true),
+            prefs.getBoolean(PREF_RESET_SHOW_MONTHLY,   false),
+            prefs.getBoolean(PREF_RESET_SHOW_SENKA,     false),
+            prefs.getBoolean(PREF_RESET_SHOW_EO,        false),
+        };
+        int count = 0;
+        for (boolean b : show) if (b) count++;
+        int[] enabled = new int[count];
+        int idx = 0;
+        for (int i = 0; i < show.length; i++) {
+            if (show[i]) enabled[idx++] = KcaResetTimer.ALL_TYPES[i];
+        }
+        return enabled;
+    }
+
+    /** Bind reset timer data as a compact inline text row: "演習 05:23 | 週間 4d | ..." */
+    private void bindResetTimerData() {
+        if (leftPaneView == null) return;
+        TextView inlineTv = leftPaneView.findViewById(R.id.reset_timer_inline);
+        if (inlineTv == null) return;
+
+        int[] types = getEnabledResetTypes();
+        if (types.length == 0) {
+            leftPaneView.findViewById(R.id.section_reset_timer).setVisibility(View.GONE);
+            return;
+        }
+        leftPaneView.findViewById(R.id.section_reset_timer).setVisibility(View.VISIBLE);
+
+        java.util.List<KcaResetTimer.ResetEntry> entries = KcaResetTimer.getResetEntries(types);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < entries.size(); i++) {
+            KcaResetTimer.ResetEntry entry = entries.get(i);
+            String label = (entry.type < RESET_TYPE_LABEL_RES.length)
+                    ? getString(RESET_TYPE_LABEL_RES[entry.type]) : "?";
+            String time = formatResetShort(entry.msUntilReset);
+            if (i > 0) sb.append(" | ");
+            sb.append(label).append(' ').append(time);
+        }
+        inlineTv.setText(sb.toString());
+    }
+
+    /**
+     * Short format for reset countdowns: <1 day → "HH:MM", >=1 day → "Xd HH:MM".
+     */
+    private static String formatResetShort(long msUntil) {
+        if (msUntil <= 0) return "00:00";
+        long totalSec = msUntil / 1000;
+        long days = totalSec / 86400;
+        long hours = (totalSec % 86400) / 3600;
+        long mins  = (totalSec % 3600) / 60;
+        if (days >= 1) return days + "d " + KcaUtils.format("%02d:%02d", hours, mins);
+        return KcaUtils.format("%02d:%02d", hours, mins);
+    }
+
+    // ---- Phase 9D: Dock/Construction/Expedition Timers ----
+
+    /**
+     * Create all dock grid TextViews once at setup time.
+     * Combined grid: 4 rows × 4 cols (repair_name, repair_time, constr_name, constr_time).
+     * Expd grid: 3 rows × 2 cols (name, time).
+     * Stored in mDockCombinedCells[row*4+col] and mDockExpdCells[row*2+col].
+     */
+    private void initDockGrids() {
+        GridLayout combinedGrid = leftPaneView.findViewById(R.id.docks_combined_grid);
+        GridLayout expdGrid = leftPaneView.findViewById(R.id.docks_expd_grid);
+        if (combinedGrid == null || expdGrid == null) return;
+
+        float density = getResources().getDisplayMetrics().density;
+
+        // Combined grid: 4 rows × 4 cols
+        mDockCombinedCells = new TextView[16];
+        float[] colWeights = {0.30f, 0.20f, 0.30f, 0.20f};
+        boolean[] isName   = {true,  false, true,  false};
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                TextView tv = new TextView(this);
+                tv.setTextSize(9);
+                tv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+                tv.setMaxLines(1);
+                tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                if (!isName[col]) tv.setTypeface(android.graphics.Typeface.MONOSPACE);
+                GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
+                        GridLayout.spec(row, 1),
+                        GridLayout.spec(col, 1, colWeights[col]));
+                lp.width = 0;
+                lp.setMargins((int)(2 * density), 0, 0, 0);
+                tv.setLayoutParams(lp);
+                combinedGrid.addView(tv);
+                mDockCombinedCells[row * 4 + col] = tv;
+            }
+        }
+
+        // Expd grid: 3 rows × 2 cols
+        mDockExpdCells = new TextView[6];
+        for (int row = 0; row < 3; row++) {
+            // Name cell (col 0)
+            TextView nameTv = new TextView(this);
+            nameTv.setTextSize(9);
+            nameTv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+            nameTv.setMaxLines(1);
+            nameTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            GridLayout.LayoutParams nameLp = new GridLayout.LayoutParams(
+                    GridLayout.spec(row, 1),
+                    GridLayout.spec(0, 1, 0.55f));
+            nameLp.width = 0;
+            nameLp.setMargins((int)(2*density), 0, (int)(2*density), 0);
+            nameTv.setLayoutParams(nameLp);
+            expdGrid.addView(nameTv);
+            mDockExpdCells[row * 2] = nameTv;
+
+            // Time cell (col 1)
+            TextView timeTv = new TextView(this);
+            timeTv.setTextSize(9);
+            timeTv.setTypeface(android.graphics.Typeface.MONOSPACE);
+            timeTv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+            GridLayout.LayoutParams timeLp = new GridLayout.LayoutParams(
+                    GridLayout.spec(row, 1),
+                    GridLayout.spec(1, 1, 0.45f));
+            timeLp.width = 0;
+            timeLp.setMargins(0, 0, (int)(2*density), 0);
+            timeTv.setLayoutParams(timeLp);
+            expdGrid.addView(timeTv);
+            mDockExpdCells[row * 2 + 1] = timeTv;
+        }
+    }
+
+    /** Bind repair, construction, and expedition timer rows into the docks section. */
+    private void bindDockTimerData() {
+        if (leftPaneView == null) return;
+        View sectionView = leftPaneView.findViewById(R.id.section_docks);
+        if (sectionView == null) return;
+
+        bindRepairConstrGrid(KcaDockTimerData.getRepairSlots(dbHelper),
+                KcaDockTimerData.getConstructionSlots(dbHelper));
+        bindDockGrid(KcaDockTimerData.getExpeditionSlots(dbHelper));
+    }
+
+    /**
+     * Update repair and construction cells in the already-inflated combined grid.
+     * Columns: repair_name | repair_time | constr_name | constr_time
+     */
+    private void bindRepairConstrGrid(
+            java.util.List<KcaDockTimerData.DockSlot> repair,
+            java.util.List<KcaDockTimerData.DockSlot> constr) {
+        if (mDockCombinedCells == null) return;
+        int rows = Math.max(repair.size(), constr.size());
+        for (int i = 0; i < 4; i++) {
+            KcaDockTimerData.DockSlot r = i < repair.size() ? repair.get(i) : null;
+            KcaDockTimerData.DockSlot c = i < constr.size() ? constr.get(i) : null;
+            int state0 = r != null ? r.state : KcaDockTimerData.STATE_EMPTY;
+            int state2 = c != null ? c.state : KcaDockTimerData.STATE_EMPTY;
+            String repairTime = (r != null && r.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(r.completionMs) : "";
+            String constrTime = (c != null && c.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(c.completionMs) : "";
+
+            mDockCombinedCells[i * 4 + 0].setText(r != null ? r.label : "—");
+            mDockCombinedCells[i * 4 + 0].setTextColor(getDockTextColor(state0));
+            mDockCombinedCells[i * 4 + 1].setText(repairTime);
+            mDockCombinedCells[i * 4 + 1].setTextColor(getDockTextColor(state0));
+            mDockCombinedCells[i * 4 + 2].setText(c != null ? c.label : "—");
+            mDockCombinedCells[i * 4 + 2].setTextColor(getDockTextColor(state2));
+            mDockCombinedCells[i * 4 + 3].setText(constrTime);
+            mDockCombinedCells[i * 4 + 3].setTextColor(getDockTextColor(state2));
+        }
+    }
+
+    private void bindDockGrid(java.util.List<KcaDockTimerData.DockSlot> slots) {
+        if (mDockExpdCells == null) return;
+        for (int i = 0; i < 3; i++) {
+            KcaDockTimerData.DockSlot slot = i < slots.size() ? slots.get(i) : null;
+            int state = slot != null ? slot.state : KcaDockTimerData.STATE_EMPTY;
+            String timeStr = (slot != null && slot.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(slot.completionMs) : "";
+            mDockExpdCells[i * 2].setText(slot != null ? slot.label : "—");
+            mDockExpdCells[i * 2].setTextColor(getDockTextColor(state));
+            mDockExpdCells[i * 2 + 1].setText(timeStr);
+            mDockExpdCells[i * 2 + 1].setTextColor(getDockTextColor(state));
+        }
+    }
+
+    private int getDockTextColor(int state) {
+        switch (state) {
+            case KcaDockTimerData.STATE_DONE:   return 0xFF4CAF50; // green
+            case KcaDockTimerData.STATE_NEAR:   return ContextCompat.getColor(this, R.color.colorFleetShipFatigue1); // yellow
+            case KcaDockTimerData.STATE_ACTIVE: return 0xFF64B5F6; // blue
+            case KcaDockTimerData.STATE_LSC:    return ContextCompat.getColor(this, R.color.colorFleetShipFatigue2); // red
+            case KcaDockTimerData.STATE_EMPTY:
+            default:                            return 0xFF888888; // gray
+        }
+    }
+
+    // ---- Quest tracking ----
+
+
     /** Bind quest tracking data to left pane */
     private void bindQuestTrackData() {
         if (leftPaneView == null) return;
@@ -1569,6 +1823,8 @@ public class FleetPanelActivity extends BaseActivity {
         // Refresh left pane data (split pane mode only)
         bindHQInfoData();
         bindResourceData();
+        bindResetTimerData();
+        bindDockTimerData();
         bindQuestTrackData();
         if (splitPaneEnabled) {
             bindCompactFleetData();
@@ -1580,9 +1836,13 @@ public class FleetPanelActivity extends BaseActivity {
         timeScheduler = Executors.newSingleThreadScheduledExecutor();
         timeScheduler.scheduleWithFixedDelay(() -> {
             mHandler.post(() -> {
-                if (!isDestroyed() && fleetContentView != null && fleetDataManager != null) {
+                if (isDestroyed()) return;
+                if (fleetContentView != null && fleetDataManager != null) {
                     fleetDataManager.formatFleetInfoLine(fleetContentView, -2);
                 }
+                // Tick reset timers and dock timers every second
+                bindResetTimerData();
+                bindDockTimerData();
             });
         }, 0, 1, TimeUnit.SECONDS);
     }
