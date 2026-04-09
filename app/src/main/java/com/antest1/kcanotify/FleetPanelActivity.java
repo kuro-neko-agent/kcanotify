@@ -128,6 +128,9 @@ public class FleetPanelActivity extends BaseActivity {
     private int switch_status = 1;
 
     private View leftPaneView; // Left pane root (only in split pane mode)
+    // Dock grid cells — created once, updated each tick (4 rows × 4 cols, then 3 rows × 2 cols)
+    private TextView[] mDockCombinedCells; // 16 cells: row*4+col
+    private TextView[] mDockExpdCells;     // 6 cells: row*2+col
     private RightPanePagerAdapter pagerAdapter;
     private ViewPager2 viewPager;
     private int hqLevel = 1; // cached HQ level for resource regen cap calculation
@@ -659,6 +662,9 @@ public class FleetPanelActivity extends BaseActivity {
 
         // Reset timer section — collapsible, default collapsed
         setupResetTimerCollapse();
+
+        // Dock timer grids — create TextViews once; ticks only call setText/setTextColor
+        initDockGrids();
     }
 
     /** Setup collapsible reset timer section (default collapsed). */
@@ -1445,118 +1451,128 @@ public class FleetPanelActivity extends BaseActivity {
 
     // ---- Phase 9D: Dock/Construction/Expedition Timers ----
 
+    /**
+     * Create all dock grid TextViews once at setup time.
+     * Combined grid: 4 rows × 4 cols (repair_name, repair_time, constr_name, constr_time).
+     * Expd grid: 3 rows × 2 cols (name, time).
+     * Stored in mDockCombinedCells[row*4+col] and mDockExpdCells[row*2+col].
+     */
+    private void initDockGrids() {
+        GridLayout combinedGrid = leftPaneView.findViewById(R.id.docks_combined_grid);
+        GridLayout expdGrid = leftPaneView.findViewById(R.id.docks_expd_grid);
+        if (combinedGrid == null || expdGrid == null) return;
+
+        float density = getResources().getDisplayMetrics().density;
+
+        // Combined grid: 4 rows × 4 cols
+        mDockCombinedCells = new TextView[16];
+        float[] colWeights = {0.30f, 0.20f, 0.30f, 0.20f};
+        boolean[] isName   = {true,  false, true,  false};
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                TextView tv = new TextView(this);
+                tv.setTextSize(9);
+                tv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+                tv.setMaxLines(1);
+                tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                if (!isName[col]) tv.setTypeface(android.graphics.Typeface.MONOSPACE);
+                GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
+                        GridLayout.spec(row, 1),
+                        GridLayout.spec(col, 1, colWeights[col]));
+                lp.width = 0;
+                lp.setMargins((int)(2 * density), 0, 0, 0);
+                tv.setLayoutParams(lp);
+                combinedGrid.addView(tv);
+                mDockCombinedCells[row * 4 + col] = tv;
+            }
+        }
+
+        // Expd grid: 3 rows × 2 cols
+        mDockExpdCells = new TextView[6];
+        for (int row = 0; row < 3; row++) {
+            // Name cell (col 0)
+            TextView nameTv = new TextView(this);
+            nameTv.setTextSize(9);
+            nameTv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+            nameTv.setMaxLines(1);
+            nameTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            GridLayout.LayoutParams nameLp = new GridLayout.LayoutParams(
+                    GridLayout.spec(row, 1),
+                    GridLayout.spec(0, 1, 0.55f));
+            nameLp.width = 0;
+            nameLp.setMargins((int)(2*density), 0, (int)(2*density), 0);
+            nameTv.setLayoutParams(nameLp);
+            expdGrid.addView(nameTv);
+            mDockExpdCells[row * 2] = nameTv;
+
+            // Time cell (col 1)
+            TextView timeTv = new TextView(this);
+            timeTv.setTextSize(9);
+            timeTv.setTypeface(android.graphics.Typeface.MONOSPACE);
+            timeTv.setTextColor(getDockTextColor(KcaDockTimerData.STATE_EMPTY));
+            GridLayout.LayoutParams timeLp = new GridLayout.LayoutParams(
+                    GridLayout.spec(row, 1),
+                    GridLayout.spec(1, 1, 0.45f));
+            timeLp.width = 0;
+            timeLp.setMargins(0, 0, (int)(2*density), 0);
+            timeTv.setLayoutParams(timeLp);
+            expdGrid.addView(timeTv);
+            mDockExpdCells[row * 2 + 1] = timeTv;
+        }
+    }
+
     /** Bind repair, construction, and expedition timer rows into the docks section. */
     private void bindDockTimerData() {
         if (leftPaneView == null) return;
         View sectionView = leftPaneView.findViewById(R.id.section_docks);
         if (sectionView == null) return;
 
-        bindRepairConstrGrid(leftPaneView.findViewById(R.id.docks_combined_grid),
-                KcaDockTimerData.getRepairSlots(dbHelper),
+        bindRepairConstrGrid(KcaDockTimerData.getRepairSlots(dbHelper),
                 KcaDockTimerData.getConstructionSlots(dbHelper));
-        bindDockGrid(leftPaneView.findViewById(R.id.docks_expd_grid),
-                KcaDockTimerData.getExpeditionSlots(dbHelper));
+        bindDockGrid(KcaDockTimerData.getExpeditionSlots(dbHelper));
     }
 
     /**
-     * Bind repair and construction slots side by side into a 4-column GridLayout.
+     * Update repair and construction cells in the already-inflated combined grid.
      * Columns: repair_name | repair_time | constr_name | constr_time
      */
-    private void bindRepairConstrGrid(GridLayout grid,
+    private void bindRepairConstrGrid(
             java.util.List<KcaDockTimerData.DockSlot> repair,
             java.util.List<KcaDockTimerData.DockSlot> constr) {
-        if (grid == null) return;
-        grid.removeAllViews();
-        float density = getResources().getDisplayMetrics().density;
+        if (mDockCombinedCells == null) return;
         int rows = Math.max(repair.size(), constr.size());
-        for (int i = 0; i < rows; i++) {
+        for (int i = 0; i < 4; i++) {
             KcaDockTimerData.DockSlot r = i < repair.size() ? repair.get(i) : null;
             KcaDockTimerData.DockSlot c = i < constr.size() ? constr.get(i) : null;
-            addCombinedDockRow(grid, r, c, i, density);
+            int state0 = r != null ? r.state : KcaDockTimerData.STATE_EMPTY;
+            int state2 = c != null ? c.state : KcaDockTimerData.STATE_EMPTY;
+            String repairTime = (r != null && r.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(r.completionMs) : "";
+            String constrTime = (c != null && c.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(c.completionMs) : "";
+
+            mDockCombinedCells[i * 4 + 0].setText(r != null ? r.label : "—");
+            mDockCombinedCells[i * 4 + 0].setTextColor(getDockTextColor(state0));
+            mDockCombinedCells[i * 4 + 1].setText(repairTime);
+            mDockCombinedCells[i * 4 + 1].setTextColor(getDockTextColor(state0));
+            mDockCombinedCells[i * 4 + 2].setText(c != null ? c.label : "—");
+            mDockCombinedCells[i * 4 + 2].setTextColor(getDockTextColor(state2));
+            mDockCombinedCells[i * 4 + 3].setText(constrTime);
+            mDockCombinedCells[i * 4 + 3].setTextColor(getDockTextColor(state2));
         }
     }
 
-    private void addCombinedDockRow(GridLayout grid,
-            KcaDockTimerData.DockSlot repair, KcaDockTimerData.DockSlot constr,
-            int row, float density) {
-        // repair name (col 0, weight 0.30)
-        addDockCell(grid, repair != null ? repair.label : "—",
-                repair != null ? repair.state : KcaDockTimerData.STATE_EMPTY,
-                row, 0, 0.30f, true, density);
-        // repair time (col 1, weight 0.20)
-        String repairTime = (repair != null && repair.completionMs > 0)
-                ? KcaDockTimerData.formatTime(repair.completionMs) : "";
-        addDockCell(grid, repairTime,
-                repair != null ? repair.state : KcaDockTimerData.STATE_EMPTY,
-                row, 1, 0.20f, false, density);
-        // constr name (col 2, weight 0.30)
-        addDockCell(grid, constr != null ? constr.label : "—",
-                constr != null ? constr.state : KcaDockTimerData.STATE_EMPTY,
-                row, 2, 0.30f, true, density);
-        // constr time (col 3, weight 0.20)
-        String constrTime = (constr != null && constr.completionMs > 0)
-                ? KcaDockTimerData.formatTime(constr.completionMs) : "";
-        addDockCell(grid, constrTime,
-                constr != null ? constr.state : KcaDockTimerData.STATE_EMPTY,
-                row, 3, 0.20f, false, density);
-    }
-
-    private void addDockCell(GridLayout grid, String text, int state,
-            int row, int col, float weight, boolean isName, float density) {
-        TextView tv = new TextView(this);
-        tv.setText(text);
-        tv.setTextSize(9);
-        tv.setTextColor(getDockTextColor(state));
-        tv.setMaxLines(1);
-        tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        if (!isName) tv.setTypeface(android.graphics.Typeface.MONOSPACE);
-        GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
-                GridLayout.spec(row, 1, weight),
-                GridLayout.spec(col, 1, weight));
-        lp.width = 0;
-        lp.setMargins((int)(2 * density), 0, 0, 0);
-        tv.setLayoutParams(lp);
-        grid.addView(tv);
-    }
-
-    private void bindDockGrid(GridLayout grid, java.util.List<KcaDockTimerData.DockSlot> slots) {
-        if (grid == null) return;
-        grid.removeAllViews();
-        float density = getResources().getDisplayMetrics().density;
-
-        for (KcaDockTimerData.DockSlot slot : slots) {
-            // Name label cell
-            TextView nameTv = new TextView(this);
-            nameTv.setText(slot.label);
-            nameTv.setTextSize(9);
-            nameTv.setTextColor(getDockTextColor(slot.state));
-            nameTv.setMaxLines(1);
-            nameTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            GridLayout.LayoutParams nameLp = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1, 0.55f),
-                    GridLayout.spec(0, 1, 0.55f));
-            nameLp.width = 0;
-            nameLp.setMargins((int)(2*density), 0, (int)(2*density), 0);
-            nameTv.setLayoutParams(nameLp);
-            grid.addView(nameTv);
-
-            // Countdown cell
-            TextView timeTv = new TextView(this);
-            String timeStr = "";
-            if (slot.completionMs > 0) {
-                timeStr = KcaDockTimerData.formatTime(slot.completionMs);
-            }
-            timeTv.setText(timeStr);
-            timeTv.setTextSize(9);
-            timeTv.setTypeface(android.graphics.Typeface.MONOSPACE);
-            timeTv.setTextColor(getDockTextColor(slot.state));
-            GridLayout.LayoutParams timeLp = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1, 0.45f),
-                    GridLayout.spec(1, 1, 0.45f));
-            timeLp.width = 0;
-            timeLp.setMargins(0, 0, (int)(2*density), 0);
-            timeTv.setLayoutParams(timeLp);
-            grid.addView(timeTv);
+    private void bindDockGrid(java.util.List<KcaDockTimerData.DockSlot> slots) {
+        if (mDockExpdCells == null) return;
+        for (int i = 0; i < 3; i++) {
+            KcaDockTimerData.DockSlot slot = i < slots.size() ? slots.get(i) : null;
+            int state = slot != null ? slot.state : KcaDockTimerData.STATE_EMPTY;
+            String timeStr = (slot != null && slot.completionMs > 0)
+                    ? KcaDockTimerData.formatTime(slot.completionMs) : "";
+            mDockExpdCells[i * 2].setText(slot != null ? slot.label : "—");
+            mDockExpdCells[i * 2].setTextColor(getDockTextColor(state));
+            mDockExpdCells[i * 2 + 1].setText(timeStr);
+            mDockExpdCells[i * 2 + 1].setTextColor(getDockTextColor(state));
         }
     }
 

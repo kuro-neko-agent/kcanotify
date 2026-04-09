@@ -126,10 +126,10 @@ public class KcaResetTimer {
         return c.getTimeInMillis();
     }
 
-    /** Next 1st-of-quarter 05:00 JST (Jan/Apr/Jul/Oct). */
+    /** Next 1st-of-quarter 05:00 JST (Mar/Jun/Sep/Dec). */
     private static long nextQuarterly5(Calendar now) {
-        int[] quarterMonths = {Calendar.JANUARY, Calendar.APRIL,
-                               Calendar.JULY, Calendar.OCTOBER};
+        int[] quarterMonths = {Calendar.MARCH, Calendar.JUNE,
+                               Calendar.SEPTEMBER, Calendar.DECEMBER};
         int year = now.get(Calendar.YEAR);
         Calendar c = Calendar.getInstance(JST);
 
