@@ -888,6 +888,7 @@
     <string name="panel_section_dock_constr">건조</string>
     <string name="panel_section_dock_expd">원정</string>
 
+
     <!-- Phase 8D: Empty states -->
     <string name="panel_no_battle_data">전투 데이터 없음</string>
     <string name="panel_no_quest_data">임무 데이터 없음</string>

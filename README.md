@@ -2,6 +2,14 @@
 <img src="https://kcanotify-docs.s3.ap-northeast-1.amazonaws.com/common/main_image.webp" width=192/>
 Viewer Application for KanColle Android
 
+## Disclaimer
+
+This repository is a personal fork of [kcanotify](https://github.com/antest1/kcanotify), originally created by [antest1](https://github.com/antest1).
+
+I maintain this fork for my own use and experimentation, mainly to add foldable-friendly features such as a split-screen fleet panel and a compact UI. Development was primarily AI-assisted using Claude Code.
+
+This repository is not affiliated with, endorsed by, or officially associated with the upstream project or its original author.
+
 About Project
 -------
 Kcanotify is an open-source viewer tool for Kantai Collection Android, provides various features like expedition/docking notification or see battle prediction.
@@ -49,13 +57,14 @@ Attribution
 -------
 - This project uses the modified source code of [PCAPdroid](https://github.com/emanuele-f/PCAPdroid/) and [NetGuard](https://github.com/M66B/NetGuard/) for capturing the traffic of Kancolle application.  
   The license for PCAPdroid and NetGuard is [GNU General Public License version 3](http://www.gnu.org/licenses/gpl.txt).
-- The fairy and equipment images are from the original kancolle resources.  
+- The fairy, equipment, and resource material icons are from the original kancolle resources.  
   I will take action immediately when there is a request from the copyright holder for correction.  
 - Translation data for ships, equipments and quest are mainly from [kc3-translations](https://github.com/KC3Kai/kc3-translations) and [kcwiki舰娘百科](https://zh.kcwiki.org).
   - License for kc3-translations: The MIT License [Text](https://github.com/KC3Kai/kc3-translations/blob/master/LICENSE)
 - The code for line of seek(索敵) & fighter power(制空権) calculation are written with reference to [艦隊シミュレーター＆デッキビルダー](http://kancolle-calc.net/deckbuilder.html)
 - Akashi's arsenal improvement data is written with reference to [KC3Kai](https://github.com/KC3Kai/KC3Kai), [WhoCallsTheFleet](https://github.com/TeamFleet/WhoCallsTheFleet-DB) and [明石の改修工廠早見表](http://akashi-list.me).
 - Great success rate calculation and Daihatsu bonus formula are based on data from [poi-plugin-ezexped](https://github.com/poooi/poi-plugin-ezexped) and [艦これ 攻略 Wiki*](https://wikiwiki.jp/kancolle/).
+- Some UI icons (ship, equipment indicators) use [Material Design Icons](https://github.com/google/material-design-icons) by Google ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)).
 - Reference sites: [艦これ 攻略 Wiki*](http://wikiwiki.jp/kancolle/), [Kancolle Wikia](http://kancolle.wikia.com), [kcwiki舰娘百科](https://zh.kcwiki.org)
 
 
@@ -75,7 +84,9 @@ Thank you to all our backers! [[Become a backer](https://opencollective.com/kcan
 
 License
 -------
-[GNU General Public License version 3](http://www.gnu.org/licenses/gpl.txt)
+As a fork of kcanotify, this repository continues to be distributed under the [GNU General Public License v3.0 (GPL-3.0)](http://www.gnu.org/licenses/gpl.txt). Original copyright and license notices are retained where applicable, and modifications in this fork are released under the same license.
+
+See the [LICENSE](./LICENSE) file for details.
 
 Copyright (c) 2016-2026 antest1(IE10)
 

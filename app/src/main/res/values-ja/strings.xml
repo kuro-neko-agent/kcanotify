@@ -888,6 +888,7 @@
     <string name="panel_section_dock_constr">建造</string>
     <string name="panel_section_dock_expd">遠征</string>
 
+
     <!-- Phase 8D: Empty states -->
     <string name="panel_no_battle_data">戦闘データなし</string>
     <string name="panel_no_quest_data">任務データなし</string>

@@ -1589,6 +1589,7 @@ public class FleetPanelActivity extends BaseActivity {
 
     // ---- Quest tracking ----
 
+
     /** Bind quest tracking data to left pane */
     private void bindQuestTrackData() {
         if (leftPaneView == null) return;
