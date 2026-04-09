@@ -135,8 +135,13 @@ public class KcaDockTimerData {
             }
             int missionNo = mission.get(1).getAsInt();
             long arriveMs = mission.get(2).getAsLong();
-            String expHead = KcaExpedition2.getExpeditionHeader(missionNo).trim();
-            String label = "F" + fleetNo + " " + expHead;
+            String expName = KcaApiData.getExpeditionName(missionNo);
+            String label;
+            if (expName != null && !expName.isEmpty()) {
+                label = "F" + fleetNo + ": " + expName;
+            } else {
+                label = "F" + fleetNo + " " + KcaExpedition2.getExpeditionHeader(missionNo).trim();
+            }
             long nowMs = System.currentTimeMillis();
             long remMs = arriveMs - nowMs;
             int st;
