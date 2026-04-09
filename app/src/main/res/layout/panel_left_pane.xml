@@ -15,11 +15,11 @@
         <!-- Section 0: HQ Info bar -->
         <include layout="@layout/panel_section_hq_info" />
 
-        <!-- Section 1: Resource overview -->
-        <include layout="@layout/panel_section_resource" />
-
-        <!-- Section 2: Server reset countdown (Phase 9E) -->
+        <!-- Section 1: Server reset countdown (Phase 9E) — compact collapsible -->
         <include layout="@layout/panel_section_reset_timer" />
+
+        <!-- Section 2: Resource overview -->
+        <include layout="@layout/panel_section_resource" />
 
         <!-- Section 3: Fleet info (compact for split-pane) -->
         <include layout="@layout/panel_section_fleet_compact" />

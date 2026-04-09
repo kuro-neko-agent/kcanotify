@@ -1404,12 +1404,11 @@ public class FleetPanelActivity extends BaseActivity {
         return enabled;
     }
 
-    /** Bind reset timer rows into the reset-timer section grid. */
+    /** Bind reset timer data as a compact inline text row: "演習 05:23 | 週間 4d | ..." */
     private void bindResetTimerData() {
         if (leftPaneView == null) return;
-        GridLayout grid = leftPaneView.findViewById(R.id.reset_timer_grid);
-        if (grid == null) return;
-        grid.removeAllViews();
+        TextView inlineTv = leftPaneView.findViewById(R.id.reset_timer_inline);
+        if (inlineTv == null) return;
 
         int[] types = getEnabledResetTypes();
         if (types.length == 0) {
@@ -1419,48 +1418,29 @@ public class FleetPanelActivity extends BaseActivity {
         leftPaneView.findViewById(R.id.section_reset_timer).setVisibility(View.VISIBLE);
 
         java.util.List<KcaResetTimer.ResetEntry> entries = KcaResetTimer.getResetEntries(types);
-        float density = getResources().getDisplayMetrics().density;
-
-        for (KcaResetTimer.ResetEntry entry : entries) {
-            // Label cell
-            TextView labelTv = new TextView(this);
-            String labelText = (entry.type < RESET_TYPE_LABEL_RES.length)
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < entries.size(); i++) {
+            KcaResetTimer.ResetEntry entry = entries.get(i);
+            String label = (entry.type < RESET_TYPE_LABEL_RES.length)
                     ? getString(RESET_TYPE_LABEL_RES[entry.type]) : "?";
-            labelTv.setText(labelText);
-            labelTv.setTextSize(9);
-            labelTv.setTextColor(ContextCompat.getColor(this, R.color.white));
-            GridLayout.LayoutParams labelLp = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1, 0.45f),
-                    GridLayout.spec(0, 1, 0.45f));
-            labelLp.width = 0;
-            labelLp.setMargins((int)(2*density), 0, (int)(2*density), 0);
-            labelTv.setLayoutParams(labelLp);
-            grid.addView(labelTv);
-
-            // Countdown cell
-            TextView timeTv = new TextView(this);
-            String countdown = KcaResetTimer.formatCountdown(entry.msUntilReset);
-            timeTv.setText(countdown);
-            timeTv.setTextSize(9);
-            timeTv.setTypeface(android.graphics.Typeface.MONOSPACE);
-            // Color: <1hr red, <6hr yellow, else white
-            int textColor;
-            if (entry.msUntilReset < 3600000L) {
-                textColor = ContextCompat.getColor(this, R.color.colorFleetShipFatigue2); // red
-            } else if (entry.msUntilReset < 21600000L) {
-                textColor = ContextCompat.getColor(this, R.color.colorFleetShipFatigue1); // yellow
-            } else {
-                textColor = ContextCompat.getColor(this, R.color.white);
-            }
-            timeTv.setTextColor(textColor);
-            GridLayout.LayoutParams timeLp = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1, 0.55f),
-                    GridLayout.spec(1, 1, 0.55f));
-            timeLp.width = 0;
-            timeLp.setMargins(0, 0, (int)(2*density), 0);
-            timeTv.setLayoutParams(timeLp);
-            grid.addView(timeTv);
+            String time = formatResetShort(entry.msUntilReset);
+            if (i > 0) sb.append(" | ");
+            sb.append(label).append(' ').append(time);
         }
+        inlineTv.setText(sb.toString());
+    }
+
+    /**
+     * Short format for reset countdowns: <1 day → "HH:MM", >=1 day → "Xd HH:MM".
+     */
+    private static String formatResetShort(long msUntil) {
+        if (msUntil <= 0) return "00:00";
+        long totalSec = msUntil / 1000;
+        long days = totalSec / 86400;
+        long hours = (totalSec % 86400) / 3600;
+        long mins  = (totalSec % 3600) / 60;
+        if (days >= 1) return days + "d " + KcaUtils.format("%02d:%02d", hours, mins);
+        return KcaUtils.format("%02d:%02d", hours, mins);
     }
 
     // ---- Phase 9D: Dock/Construction/Expedition Timers ----
